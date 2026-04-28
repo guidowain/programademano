@@ -27,7 +27,7 @@ export default function Home() {
         <p
           style={{
             margin: 0,
-            fontSize: "clamp(18px, 3vw, 28px)",
+            fontSize: "clamp(36px, 6vw, 56px)",
             fontWeight: 800,
             letterSpacing: 0,
             textTransform: "uppercase",

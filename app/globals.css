@@ -348,18 +348,50 @@ a {
 }
 
 .admin-upload {
-  display: grid;
-  gap: 10px;
-  max-width: 720px;
+  max-width: 820px;
   margin-bottom: 24px;
 }
 
 .admin-file-input {
-  border: 2px dashed rgba(255, 255, 255, 0.12);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.admin-upload-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  color: rgba(255, 255, 255, 0.68);
-  padding: 18px;
+  background: #18181b;
+  padding: 16px;
+}
+
+.admin-upload-title {
+  margin: 0;
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.admin-upload-help {
+  margin: 5px 0 0;
+  color: rgba(255, 255, 255, 0.36);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.admin-upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .admin-order-controls {
@@ -436,12 +468,14 @@ a {
   }
 
   .admin-page-header,
-  .admin-card {
+  .admin-card,
+  .admin-upload-panel {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .admin-actions {
+  .admin-actions,
+  .admin-upload-actions {
     flex-wrap: wrap;
   }
 }

@@ -226,7 +226,7 @@ export async function deleteProgram(slug: string) {
 
 function uploadBuffer(buffer: Buffer, slug: string, order: number, fileName: string) {
   const folder = getProgramFolder(slug);
-  const publicId = `${slug}_${String(order).padStart(3, "0")}_${getSafeFileStem(fileName)}`;
+  const publicId = `${String(order).padStart(3, "0")}_${slug}_${getSafeFileStem(fileName)}`;
 
   return new Promise<CloudinaryResource & { width: number; height: number; format: string }>((resolve, reject) => {
     const stream = getCloudinary().uploader.upload_stream(
@@ -253,7 +253,7 @@ function uploadBuffer(buffer: Buffer, slug: string, order: number, fileName: str
 }
 
 function getResourceOrder(resource: CloudinaryResource, fallbackIndex: number) {
-  const context = resource.context?.custom ?? {};
+  const context = getResourceContext(resource);
   const order = Number(context.order);
 
   if (Number.isFinite(order) && order > 0) return order;
@@ -263,6 +263,17 @@ function getResourceOrder(resource: CloudinaryResource, fallbackIndex: number) {
   if (match) return Number(match[1]);
 
   return fallbackIndex + 1;
+}
+
+function getResourceContext(resource: CloudinaryResource) {
+  const context = resource.context ?? {};
+  const customContext = context.custom;
+
+  if (customContext && typeof customContext === "object") {
+    return customContext;
+  }
+
+  return context as Record<string, string>;
 }
 
 async function searchProgramFolder(folder: string): Promise<CloudinaryResource[]> {

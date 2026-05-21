@@ -17,9 +17,15 @@ export default function EditProgramaPage() {
   const { slug } = useParams<{ slug: string }>();
   const [pages, setPages] = useState<ProgramPage[]>([]);
   const [files, setFiles] = useState<FileList | null>(null);
+  const [fileInputKey, setFileInputKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const fileCount = files?.length ?? 0;
+  const uploadInputId = `program-upload-${slug}`;
+  const fileSummary = fileCount === 0
+    ? "Ninguna imagen seleccionada"
+    : `${fileCount} ${fileCount === 1 ? "imagen seleccionada" : "imágenes seleccionadas"}`;
 
   async function fetchPages() {
     setLoading(true);
@@ -64,6 +70,7 @@ export default function EditProgramaPage() {
       }
 
       setFiles(null);
+      setFileInputKey((key) => key + 1);
       await fetchPages();
     } catch {
       setError("Error de conexión");
@@ -134,21 +141,31 @@ export default function EditProgramaPage() {
 
       <form className="admin-upload" onSubmit={handleUpload}>
         <label className="admin-field">
-          <span className="admin-label">Subir páginas</span>
+          <span className="admin-label">Cargar imágenes</span>
           <input
+            key={fileInputKey}
+            id={uploadInputId}
             className="admin-file-input"
             type="file"
             accept="image/avif,image/jpeg,image/png,image/webp"
             multiple
             onChange={(event) => setFiles(event.target.files)}
           />
-          <span className="admin-subtitle">
-            Ejemplo: 1_portada.webp, 2_elenco.webp, 10_creditos.webp.
-          </span>
+          <div className="admin-upload-panel">
+            <div>
+              <p className="admin-upload-title">{fileSummary}</p>
+              <p className="admin-upload-help">Para batchs: 1_portada.webp, 2_elenco.webp, 10_creditos.webp. Las nuevas se agregan al final.</p>
+            </div>
+            <div className="admin-upload-actions">
+              <label htmlFor={uploadInputId} className="admin-button secondary">
+                Elegir imágenes
+              </label>
+              <button type="submit" className="admin-button admin-gradient" disabled={saving || fileCount === 0}>
+                {saving ? "Subiendo..." : "Subir imágenes"}
+              </button>
+            </div>
+          </div>
         </label>
-        <button type="submit" className="admin-button admin-gradient" disabled={saving || !files?.length}>
-          {saving ? "Subiendo..." : "Subir imágenes"}
-        </button>
       </form>
 
       {loading ? <p className="admin-subtitle">Cargando...</p> : null}

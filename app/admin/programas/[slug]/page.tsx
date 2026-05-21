@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type ProgramPage = {
@@ -15,11 +15,15 @@ type ProgramPage = {
 
 export default function EditProgramaPage() {
   const { slug } = useParams<{ slug: string }>();
+  const router = useRouter();
+  const [programName, setProgramName] = useState("");
+  const [programSlug, setProgramSlug] = useState(slug);
   const [pages, setPages] = useState<ProgramPage[]>([]);
   const [files, setFiles] = useState<FileList | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingDetails, setSavingDetails] = useState(false);
   const [error, setError] = useState("");
   const fileCount = files?.length ?? 0;
   const uploadInputId = `program-upload-${slug}`;
@@ -41,10 +45,44 @@ export default function EditProgramaPage() {
       }
 
       setPages(data.pages || []);
+      setProgramName(data.name || "");
+      setProgramSlug(data.slug || slug);
     } catch {
       setError("Error de conexión");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleSaveDetails(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSavingDetails(true);
+    setError("");
+
+    try {
+      const response = await fetch(`/api/admin/programas/${slug}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: programName, slug: programSlug.trim().toLowerCase() }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "No se pudo guardar el programa");
+        return;
+      }
+
+      setProgramName(data.name || "");
+      setProgramSlug(data.slug || programSlug);
+      setPages(data.pages || []);
+
+      if (data.slug && data.slug !== slug) {
+        router.replace(`/admin/programas/${data.slug}`);
+      }
+    } catch {
+      setError("Error de conexión");
+    } finally {
+      setSavingDetails(false);
     }
   }
 
@@ -126,8 +164,8 @@ export default function EditProgramaPage() {
     <>
       <header className="admin-page-header">
         <div>
-          <h1 className="admin-title">{slug}</h1>
-          <p className="admin-subtitle">Subí páginas en batch; se ordenan por el primer número del nombre. También podés ajustar con flechas.</p>
+          <h1 className="admin-title">{programName || slug}</h1>
+          <p className="admin-subtitle">/{programSlug}</p>
         </div>
         <div className="admin-actions">
           <Link href={`/${slug}`} target="_blank" className="admin-button secondary">
@@ -138,6 +176,33 @@ export default function EditProgramaPage() {
           </Link>
         </div>
       </header>
+
+      <form className="admin-form admin-program-details" onSubmit={handleSaveDetails}>
+        <label className="admin-field">
+          <span className="admin-label">Nombre</span>
+          <input
+            className="admin-input"
+            value={programName}
+            onChange={(event) => setProgramName(event.target.value)}
+            placeholder="Mi amiga y yo"
+            required
+          />
+        </label>
+        <label className="admin-field">
+          <span className="admin-label">Slug</span>
+          <input
+            className="admin-input"
+            value={programSlug}
+            onChange={(event) => setProgramSlug(event.target.value.replace(/\s+/g, "-").toLowerCase())}
+            placeholder="miamigayyo"
+            pattern="[a-z0-9-]+"
+            required
+          />
+        </label>
+        <button type="submit" className="admin-button secondary" disabled={savingDetails}>
+          {savingDetails ? "Guardando..." : "Guardar"}
+        </button>
+      </form>
 
       <form className="admin-upload" onSubmit={handleUpload}>
         <label className="admin-field">
@@ -154,7 +219,6 @@ export default function EditProgramaPage() {
           <div className="admin-upload-panel">
             <div>
               <p className="admin-upload-title">{fileSummary}</p>
-              <p className="admin-upload-help">Para batchs: 1_portada.webp, 2_elenco.webp, 10_creditos.webp. Las nuevas se agregan al final.</p>
             </div>
             <div className="admin-upload-actions">
               <label htmlFor={uploadInputId} className="admin-button secondary">

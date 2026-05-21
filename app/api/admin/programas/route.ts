@@ -1,6 +1,6 @@
 import {
   MissingCloudinaryConfigError,
-  createProgramFolder,
+  createProgram,
   isValidProgramSlug,
   listPrograms,
 } from "@/lib/cloudinary";
@@ -19,15 +19,16 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { slug } = await request.json();
+    const { name, slug } = await request.json();
     const normalizedSlug = String(slug || "").trim().toLowerCase();
+    const normalizedName = String(name || "").trim();
 
     if (!isValidProgramSlug(normalizedSlug)) {
       return NextResponse.json({ error: "Slug inválido" }, { status: 400 });
     }
 
-    await createProgramFolder(normalizedSlug);
-    return NextResponse.json({ slug: normalizedSlug });
+    await createProgram(normalizedSlug, normalizedName);
+    return NextResponse.json({ name: normalizedName, slug: normalizedSlug });
   } catch (error) {
     console.error("Program create error:", error);
     return NextResponse.json({ error: getErrorMessage(error, "No se pudo crear el programa") }, { status: 500 });

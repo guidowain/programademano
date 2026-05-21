@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type ProgramSummary = {
+  name: string;
   slug: string;
   pageCount: number;
   coverUrl: string | null;
@@ -77,7 +78,7 @@ export default function AdminProgramasPage() {
               {program.coverUrl ? <img src={program.coverUrl} alt="" /> : null}
             </div>
             <div className="admin-card-main">
-              <h2 className="admin-card-title">{program.slug}</h2>
+              <h2 className="admin-card-title">{program.name}</h2>
               <p className="admin-card-meta">
                 /{program.slug} · {program.pageCount} {program.pageCount === 1 ? "página" : "páginas"}
               </p>

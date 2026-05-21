@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 
 export const PROGRAMAS_BASE_FOLDER = "programa-de-mano";
+const PROGRAM_METADATA_PUBLIC_ID = "programa-de-mano-metadata";
 
 export type ProgramPage = {
   assetId: string;
@@ -13,10 +14,22 @@ export type ProgramPage = {
 };
 
 export type ProgramSummary = {
+  name: string;
   slug: string;
   pageCount: number;
   coverUrl: string | null;
   updatedAt: string | null;
+};
+
+export type ProgramDetails = {
+  name: string;
+  slug: string;
+  pages: ProgramPage[];
+};
+
+type ProgramMetadata = {
+  name: string;
+  slug: string;
 };
 
 type CloudinaryResource = {
@@ -82,11 +95,16 @@ export async function listPrograms(): Promise<ProgramSummary[]> {
   const api = getCloudinary().api;
 
   try {
+    const metadata = await getProgramMetadata();
+    const metadataBySlug = new Map(metadata.map((program) => [program.slug, program]));
     const folders = await api.sub_folders(PROGRAMAS_BASE_FOLDER);
     const summaries = await Promise.all(
       (folders.folders || []).map(async (folder: { name: string }) => {
         const pages = await listProgramPages(folder.name);
+        const programMetadata = metadataBySlug.get(folder.name);
+
         return {
+          name: programMetadata?.name || formatSlugName(folder.name),
           slug: folder.name,
           pageCount: pages.length,
           coverUrl: pages[0]?.url ?? null,
@@ -102,6 +120,30 @@ export async function listPrograms(): Promise<ProgramSummary[]> {
   }
 }
 
+export async function createProgram(slug: string, name: string) {
+  await createProgramFolder(slug);
+  await upsertProgramMetadata({ slug, name: normalizeProgramName(name, slug) });
+}
+
+export async function updateProgram(currentSlug: string, input: { name: string; slug: string }) {
+  const nextSlug = input.slug.trim().toLowerCase();
+
+  if (!isValidProgramSlug(currentSlug) || !isValidProgramSlug(nextSlug)) {
+    throw new Error("Invalid slug");
+  }
+
+  if (currentSlug !== nextSlug) {
+    await getCloudinary().api.rename_folder(getProgramFolder(currentSlug), getProgramFolder(nextSlug));
+  }
+
+  await upsertProgramMetadata({
+    slug: nextSlug,
+    name: normalizeProgramName(input.name, nextSlug),
+  }, currentSlug);
+
+  return getProgramDetails(nextSlug);
+}
+
 export async function createProgramFolder(slug: string) {
   if (!isValidProgramSlug(slug)) {
     throw new Error("Invalid slug");
@@ -112,6 +154,18 @@ export async function createProgramFolder(slug: string) {
   } catch (error: unknown) {
     if (!isCloudinaryAlreadyExists(error)) throw error;
   }
+}
+
+export async function getProgramDetails(slug: string): Promise<ProgramDetails> {
+  const pages = await listProgramPages(slug);
+  const metadata = await getProgramMetadata();
+  const programMetadata = metadata.find((program) => program.slug === slug);
+
+  return {
+    name: programMetadata?.name || formatSlugName(slug),
+    slug,
+    pages,
+  };
 }
 
 export async function listProgramPages(slug: string): Promise<ProgramPage[]> {
@@ -211,17 +265,68 @@ export async function deleteProgram(slug: string) {
 
   const folder = getProgramFolder(slug);
   const api = getCloudinary().api;
+  const pages = await listProgramPages(slug);
 
-  await api.delete_resources_by_prefix(`${folder}/`, {
-    resource_type: "image",
-    invalidate: true,
-  });
+  await Promise.all(
+    pages.map((page) =>
+      getCloudinary().uploader.destroy(page.publicId, {
+        resource_type: "image",
+        invalidate: true,
+      }),
+    ),
+  );
 
   try {
     await api.delete_folder(folder);
   } catch (error: unknown) {
     if (!isCloudinaryNotFound(error)) throw error;
   }
+
+  await removeProgramMetadata(slug);
+}
+
+async function getProgramMetadata(): Promise<ProgramMetadata[]> {
+  try {
+    const resource = await getCloudinary().api.resource(PROGRAM_METADATA_PUBLIC_ID, {
+      resource_type: "raw",
+    });
+    const response = await fetch(resource.secure_url, { cache: "no-store" });
+
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    return normalizeProgramMetadata(data);
+  } catch (error: unknown) {
+    if (isCloudinaryNotFound(error)) return [];
+    return [];
+  }
+}
+
+async function saveProgramMetadata(metadata: ProgramMetadata[]) {
+  const dataUri = `data:application/json;base64,${Buffer.from(
+    JSON.stringify(normalizeProgramMetadata(metadata), null, 2),
+    "utf-8",
+  ).toString("base64")}`;
+
+  await getCloudinary().uploader.upload(dataUri, {
+    public_id: PROGRAM_METADATA_PUBLIC_ID,
+    resource_type: "raw",
+    overwrite: true,
+    invalidate: true,
+  });
+}
+
+async function upsertProgramMetadata(program: ProgramMetadata, previousSlug = program.slug) {
+  const metadata = await getProgramMetadata();
+  const nextMetadata = metadata.filter((item) => item.slug !== previousSlug && item.slug !== program.slug);
+
+  nextMetadata.push(program);
+  await saveProgramMetadata(nextMetadata);
+}
+
+async function removeProgramMetadata(slug: string) {
+  const metadata = await getProgramMetadata();
+  await saveProgramMetadata(metadata.filter((program) => program.slug !== slug));
 }
 
 function uploadBuffer(buffer: Buffer, slug: string, order: number, fileName: string) {
@@ -322,6 +427,32 @@ function getSafeFileStem(fileName: string) {
     .replace(/^-+|-+$/g, "");
 
   return cleanStem || "page";
+}
+
+function normalizeProgramName(name: string, slug: string) {
+  return name.trim() || formatSlugName(slug);
+}
+
+function normalizeProgramMetadata(data: unknown): ProgramMetadata[] {
+  if (!Array.isArray(data)) return [];
+
+  return data
+    .map((item) => {
+      const raw = item && typeof item === "object" ? (item as Partial<ProgramMetadata>) : {};
+      const slug = String(raw.slug || "").trim().toLowerCase();
+      const name = normalizeProgramName(String(raw.name || ""), slug);
+
+      return { slug, name };
+    })
+    .filter((program) => isValidProgramSlug(program.slug));
+}
+
+function formatSlugName(slug: string) {
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ") || slug;
 }
 
 function isCloudinaryNotFound(error: unknown) {

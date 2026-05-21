@@ -1,5 +1,5 @@
-import { MissingCloudinaryConfigError, deleteProgram, listProgramPages } from "@/lib/cloudinary";
-import { NextResponse } from "next/server";
+import { MissingCloudinaryConfigError, deleteProgram, getProgramDetails, updateProgram } from "@/lib/cloudinary";
+import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
@@ -9,10 +9,29 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    return NextResponse.json({ slug, pages: await listProgramPages(slug) });
+    return NextResponse.json(await getProgramDetails(slug));
   } catch (error) {
     console.error("Program detail error:", error);
     return NextResponse.json({ error: getErrorMessage(error, "No se pudo cargar el programa") }, { status: 500 });
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> },
+) {
+  try {
+    const { slug } = await params;
+    const { name, slug: nextSlug } = await request.json();
+    const details = await updateProgram(slug, {
+      name: String(name || ""),
+      slug: String(nextSlug || ""),
+    });
+
+    return NextResponse.json(details);
+  } catch (error) {
+    console.error("Program update error:", error);
+    return NextResponse.json({ error: getErrorMessage(error, "No se pudo guardar el programa") }, { status: 500 });
   }
 }
 

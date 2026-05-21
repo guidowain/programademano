@@ -300,6 +300,13 @@ a {
   gap: 18px;
 }
 
+.admin-program-details {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  max-width: 820px;
+  margin-bottom: 24px;
+}
+
 .admin-login {
   display: grid;
   min-height: 100vh;
@@ -469,7 +476,8 @@ a {
 
   .admin-page-header,
   .admin-card,
-  .admin-upload-panel {
+  .admin-upload-panel,
+  .admin-program-details {
     align-items: flex-start;
     flex-direction: column;
   }

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function NuevoProgramaPage() {
+  const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -12,6 +13,7 @@ export default function NuevoProgramaPage() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const normalizedSlug = slug.trim().toLowerCase();
+    const normalizedName = name.trim();
     setError("");
     setLoading(true);
 
@@ -19,7 +21,7 @@ export default function NuevoProgramaPage() {
       const response = await fetch("/api/admin/programas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: normalizedSlug }),
+        body: JSON.stringify({ name: normalizedName, slug: normalizedSlug }),
       });
       const data = await response.json();
 
@@ -41,11 +43,21 @@ export default function NuevoProgramaPage() {
       <header className="admin-page-header">
         <div>
           <h1 className="admin-title">Nuevo programa</h1>
-          <p className="admin-subtitle">Creá el slug y después subí las páginas.</p>
         </div>
       </header>
 
       <form className="admin-form" onSubmit={handleSubmit}>
+        <label className="admin-field">
+          <span className="admin-label">Nombre</span>
+          <input
+            className="admin-input"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="Mi amiga y yo"
+            required
+          />
+        </label>
+
         <label className="admin-field">
           <span className="admin-label">Slug</span>
           <input

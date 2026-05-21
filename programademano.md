@@ -1,159 +1,77 @@
-# ProgramaDeMano.com.ar — MVP
+# ProgramaDeMano.com.ar
 
-## 🧠 Qué es esto
+Sistema simple para mostrar programas de mano teatrales en formato digital.
 
-Un sistema ultra simple para mostrar programas de mano teatrales en formato digital.
+## Cómo funciona ahora
 
-La idea es:
-- El usuario escanea un QR en el teatro
-- Se abre una URL tipo:
-  programademano.com.ar/lacenadelostontos
-- Y ve directamente el programa (PDF) en pantalla completa, sin distracciones
+- El público entra a una URL como `programademano.com.ar/lacenadelostontos`.
+- La app busca las páginas de ese programa en Cloudinary.
+- Las imágenes se muestran en scroll continuo, pantalla limpia y sin controles.
+- El contenido se administra desde `/admin`, sin tocar el repo ni hacer deploy manual.
 
----
+## Admin
 
-## 🎯 Objetivo del MVP
+El panel vive en `/admin` y está protegido con usuario/contraseña.
 
-Resolver esto con la menor complejidad posible:
+Variables necesarias:
 
-- Sin base de datos
-- Sin backoffice real
-- Sin uploads desde la web
-- Sin procesamiento de PDF
-- Sin diseño innecesario
+```bash
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=change-me
+JWT_SECRET=change-me-to-a-long-random-secret
 
-Solo:
-👉 mostrar PDFs de forma limpia
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
 
----
+Desde el admin se puede:
 
-## ⚙️ Cómo funciona
+- crear programas por slug;
+- subir imágenes;
+- reordenar páginas con flechas;
+- borrar páginas;
+- borrar programas completos;
+- abrir la URL pública del programa.
 
-### 1. Los PDFs viven en el repo
+## Cloudinary
 
-Ubicación:
-/public/programas/
+Carpeta base:
 
-Ejemplo:
-/public/programas/lacenadelostontos.pdf
+```text
+programa-de-mano/{slug}
+```
 
----
+Cada página se guarda como imagen con metadata/context:
 
-### 2. La URL se arma automáticamente
+```text
+order=1
+slug=lacenadelostontos
+```
 
-Regla:
-{nombre del archivo}.pdf → /{nombre}
+El orden público depende de `order`; si falta, se usa el número del public ID como fallback.
 
-Ejemplo:
-lacenadelostontos.pdf → programademano.com.ar/lacenadelostontos
+## Migración inicial
 
----
+Los programas existentes en `public/programas` se pueden subir con:
 
-### 3. Next.js renderiza el visor
+```bash
+node scripts/migrate-programas-to-cloudinary.mjs --dry-run
+node scripts/migrate-programas-to-cloudinary.mjs
+```
 
-Archivo clave:
-/app/[slug]/page.tsx
+El dry-run muestra qué se va a subir. La ejecución real requiere las variables de Cloudinary.
 
-Lógica:
-const pdfPath = `/programas/${params.slug}.pdf`;
+## Scripts
 
-Se embebe en un iframe fullscreen:
+```bash
+npm run dev
+npm run build
+npm run start
+```
 
-<iframe
-  src={pdfPath}
-  style={{
-    width: "100vw",
-    height: "100vh",
-    border: "none",
-  }}
-/>
+## Notas
 
----
-
-## 🧩 Estructura del proyecto
-
-app/
-  [slug]/
-    page.tsx
-  layout.tsx
-  page.tsx
-
-public/
-  programas/
-    *.pdf
-
-package.json
-next.config.js
-
----
-
-## 🚀 Flujo de uso
-
-Para agregar un programa nuevo:
-
-1. Exportás el PDF final
-2. Lo nombrás correctamente (ej: chantas.pdf)
-3. Lo subís a:
-/public/programas/
-4. Deploy en Vercel
-
-La URL queda:
-/chantas
-
----
-
-## ⚠️ Limitaciones del MVP
-
-- No hay validación
-- No hay admin panel
-- No hay subida desde UI
-- Requiere deploy para actualizar
-- El visor depende del navegador
-
----
-
-## 🧠 Decisión técnica
-
-Se eligió simplicidad total:
-
-- Sin Cloudinary
-- Sin base de datos
-- Sin conversión a imágenes
-
----
-
-## 🔜 Futuro
-
-- Versión con imágenes para mejor mobile
-- Backoffice con login
-- Upload automático
-- Analytics
-
----
-
-## 💡 Idea de negocio
-
-Reemplazar programas físicos por digitales.
-
-Cada obra tiene:
-- su URL
-- su QR
-- su programa digital
-
-Escalable a sponsors, links, métricas, etc.
-
----
-
-## 🧾 Resumen
-
-- Subís PDF a /public/programas/
-- El nombre define la URL
-- Next lo muestra fullscreen
-- Deploy → listo
-
----
-
-## 🔥 Filosofía
-
-Primero que funcione.
-Después se mejora.
+- GitHub queda como fuente de código.
+- Cloudinary pasa a ser la fuente de contenido.
+- Las imágenes locales pueden quedarse como respaldo histórico, pero la app pública ya no las usa.

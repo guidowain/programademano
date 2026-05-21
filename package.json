@@ -5,12 +5,19 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "migrate:cloudinary": "node scripts/migrate-programas-to-cloudinary.mjs",
+    "migrate:cloudinary:dry-run": "node scripts/migrate-programas-to-cloudinary.mjs --dry-run"
   },
   "dependencies": {
-    "next": "latest",
+    "cloudinary": "^2.10.0",
+    "jose": "^6.2.3",
+    "next": "^16.2.6",
     "react": "latest",
     "react-dom": "latest"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
   },
   "devDependencies": {
     "@types/node": "25.6.0",

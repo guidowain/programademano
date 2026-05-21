@@ -1,4 +1,6 @@
 import { getProgramDetails } from "@/lib/cloudinary";
+import ProgramRecommendButton from "@/components/ProgramRecommendButton";
+import ProgramViewTracker from "@/components/ProgramViewTracker";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +21,7 @@ export default async function ProgramaPage({
 
   return (
     <main className="program-viewer">
+      <ProgramViewTracker name={program.name} slug={program.slug} />
       <div className="program-pages">
         {program.pages.map((page, index) => (
           <img
@@ -34,10 +37,7 @@ export default async function ProgramaPage({
       </div>
       {recommendationUrl ? (
         <footer className="program-recommend">
-          <a href={recommendationUrl} className="program-recommend-button" target="_blank" rel="noreferrer">
-            <span>Recomendá</span>
-            <strong>{program.name}</strong>
-          </a>
+          <ProgramRecommendButton href={recommendationUrl} name={program.name} slug={program.slug} />
         </footer>
       ) : null}
     </main>

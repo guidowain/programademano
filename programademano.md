@@ -26,6 +26,7 @@ Desde el admin se puede:
 - borrar páginas;
 - borrar programas completos;
 - abrir la URL pública de cada programa.
+- ver métricas simples por programa: 30 días, total y recomendaciones.
 
 El `Slug` define la carpeta de Cloudinary y la URL pública. Por ejemplo:
 
@@ -80,6 +81,12 @@ JWT_SECRET=
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
+
+NEXT_PUBLIC_GA_MEASUREMENT_ID=
+GOOGLE_ANALYTICS_PROPERTY_ID=
+GOOGLE_ANALYTICS_CLIENT_ID=
+GOOGLE_ANALYTICS_CLIENT_SECRET=
+GOOGLE_ANALYTICS_REFRESH_TOKEN=
 ```
 
 Estas variables deben existir localmente y en Vercel.

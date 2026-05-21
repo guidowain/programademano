@@ -13,6 +13,15 @@ type ProgramPage = {
   order: number;
 };
 
+type ProgramAnalytics = {
+  configured: boolean;
+  last30DaysViews: number;
+  totalViews: number;
+  last30DaysRecommendations: number;
+  totalRecommendations: number;
+  error?: string;
+};
+
 export default function EditProgramaPage() {
   const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
@@ -22,6 +31,7 @@ export default function EditProgramaPage() {
   const [pages, setPages] = useState<ProgramPage[]>([]);
   const [files, setFiles] = useState<FileList | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
+  const [analytics, setAnalytics] = useState<ProgramAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingDetails, setSavingDetails] = useState(false);
@@ -53,6 +63,23 @@ export default function EditProgramaPage() {
       setError("Error de conexión");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchAnalytics() {
+    try {
+      const response = await fetch(`/api/admin/programas/${slug}/analytics`, { cache: "no-store" });
+      const data = await response.json();
+      setAnalytics(data);
+    } catch {
+      setAnalytics({
+        configured: false,
+        last30DaysViews: 0,
+        totalViews: 0,
+        last30DaysRecommendations: 0,
+        totalRecommendations: 0,
+        error: "No se pudo cargar Analytics.",
+      });
     }
   }
 
@@ -161,6 +188,7 @@ export default function EditProgramaPage() {
 
   useEffect(() => {
     fetchPages();
+    fetchAnalytics();
   }, [slug]);
 
   return (
@@ -216,6 +244,14 @@ export default function EditProgramaPage() {
           {savingDetails ? "Guardando..." : "Guardar"}
         </button>
       </form>
+
+      <section className="admin-analytics-strip" aria-label="Analytics">
+        <AnalyticsStat label="Visitas 30 días" value={analytics?.last30DaysViews} />
+        <AnalyticsStat label="Visitas total" value={analytics?.totalViews} />
+        <AnalyticsStat label="Recos 30 días" value={analytics?.last30DaysRecommendations} />
+        <AnalyticsStat label="Recos total" value={analytics?.totalRecommendations} />
+      </section>
+      {analytics?.error ? <p className="admin-card-meta admin-analytics-note">{analytics.error}</p> : null}
 
       <form className="admin-upload" onSubmit={handleUpload}>
         <label className="admin-field">
@@ -298,5 +334,14 @@ export default function EditProgramaPage() {
         ))}
       </div>
     </>
+  );
+}
+
+function AnalyticsStat({ label, value }: { label: string; value?: number }) {
+  return (
+    <div className="admin-analytics-stat">
+      <span>{label}</span>
+      <strong>{typeof value === "number" ? value.toLocaleString("es-AR") : "—"}</strong>
+    </div>
   );
 }

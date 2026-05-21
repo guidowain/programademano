@@ -80,12 +80,7 @@ export default function AdminMetricasPage() {
                 <p className="admin-card-meta">/{program.slug}</p>
               </div>
 
-              <div className="admin-metric-stats">
-                <MetricStat label="Visitas 30 días" value={program.analytics.last30DaysViews} />
-                <MetricStat label="Visitas total" value={program.analytics.totalViews} />
-                <MetricStat label="Recos 30 días" value={program.analytics.last30DaysRecommendations} />
-                <MetricStat label="Recos total" value={program.analytics.totalRecommendations} />
-              </div>
+              <MetricTable analytics={program.analytics} />
             </div>
           </article>
         ))}
@@ -94,11 +89,18 @@ export default function AdminMetricasPage() {
   );
 }
 
-function MetricStat({ label, value }: { label: string; value: number }) {
+function MetricTable({ analytics }: { analytics: MetricsProgram["analytics"] }) {
   return (
-    <div className="admin-metric-stat">
-      <span>{label}</span>
-      <strong>{value.toLocaleString("es-AR")}</strong>
+    <div className="admin-metric-table" aria-label="Métricas del programa">
+      <span />
+      <span>30 días</span>
+      <span>Total</span>
+      <strong>Visitas</strong>
+      <b>{analytics.last30DaysViews.toLocaleString("es-AR")}</b>
+      <b>{analytics.totalViews.toLocaleString("es-AR")}</b>
+      <strong>Recomendaciones</strong>
+      <b>{analytics.last30DaysRecommendations.toLocaleString("es-AR")}</b>
+      <b>{analytics.totalRecommendations.toLocaleString("es-AR")}</b>
     </div>
   );
 }

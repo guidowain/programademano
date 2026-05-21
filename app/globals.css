@@ -466,35 +466,32 @@ a {
 
 .admin-metric-body {
   display: grid;
-  align-content: space-between;
-  gap: 16px;
+  gap: 22px;
   padding: 18px;
 }
 
-.admin-metric-stats {
+.admin-metric-table {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: minmax(112px, 1.4fr) repeat(2, minmax(62px, 1fr));
+  align-items: end;
+  gap: 10px 14px;
+  margin-top: auto;
 }
 
-.admin-metric-stat {
-  min-width: 0;
-}
-
-.admin-metric-stat span {
+.admin-metric-table span,
+.admin-metric-table strong {
   display: block;
   color: rgba(255, 255, 255, 0.42);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.admin-metric-stat strong {
+.admin-metric-table b {
   display: block;
-  margin-top: 4px;
   color: white;
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 900;
   line-height: 1;
 }
@@ -702,7 +699,7 @@ a {
     width: 100%;
   }
 
-  .admin-metric-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .admin-metric-table {
+    grid-template-columns: minmax(102px, 1.4fr) repeat(2, minmax(58px, 1fr));
   }
 }

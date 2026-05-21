@@ -70,6 +70,7 @@ a {
   justify-content: center;
   gap: 3px;
   border-radius: 12px;
+  border: 0;
   background: #ffffff;
   color: #050505;
   font-size: 15px;

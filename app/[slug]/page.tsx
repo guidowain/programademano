@@ -17,7 +17,7 @@ export default async function ProgramaPage({
     notFound();
   }
 
-  const recommendationUrl = getRecommendationUrl(program.name, program.ticketUrl);
+  const recommendation = getRecommendation(program.name, program.ticketUrl);
 
   return (
     <main className="program-viewer">
@@ -35,18 +35,26 @@ export default async function ProgramaPage({
           />
         ))}
       </div>
-      {recommendationUrl ? (
+      {recommendation ? (
         <footer className="program-recommend">
-          <ProgramRecommendButton href={recommendationUrl} name={program.name} slug={program.slug} />
+          <ProgramRecommendButton
+            fallbackHref={recommendation.fallbackHref}
+            message={recommendation.message}
+            name={program.name}
+            slug={program.slug}
+          />
         </footer>
       ) : null}
     </main>
   );
 }
 
-function getRecommendationUrl(name: string, ticketUrl: string) {
-  if (!ticketUrl) return "";
+function getRecommendation(name: string, ticketUrl: string) {
+  if (!ticketUrl) return null;
 
   const message = `Te recomiendo ir a ver "${name}" ${ticketUrl}`;
-  return `https://wa.me/?text=${encodeURIComponent(message)}`;
+  return {
+    message,
+    fallbackHref: `https://wa.me/?text=${encodeURIComponent(message)}`,
+  };
 }

@@ -7,10 +7,11 @@ App Next.js para publicar programas de mano digitales. Cada obra tiene una URL p
 - URL de programa: `https://programademano.com.ar/{slug}`.
 - Ejemplo: `https://programademano.com.ar/miamigayyo`.
 - La app lee las páginas desde Cloudinary y las muestra en scroll continuo.
-- Si el programa tiene link de entradas, al final aparece un botón de WhatsApp:
+- Si el programa tiene link de entradas, al final aparece un botón para recomendar:
   - primera línea: `RECOMENDÁ`;
   - segunda línea: nombre de la obra;
   - mensaje: `Te recomiendo ir a ver "{Nombre de la obra}" {link de entradas}`.
+  - en mobile abre el share sheet nativo; si el navegador no lo soporta, abre WhatsApp.
 - Si no hay link de entradas cargado, el botón no aparece.
 
 ## Admin

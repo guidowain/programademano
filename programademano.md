@@ -10,7 +10,7 @@ App Next.js para publicar programas de mano digitales. Cada obra tiene una URL p
 - Si el programa tiene link de entradas, al final aparece un botón para recomendar:
   - primera línea: `RECOMENDÁ`;
   - segunda línea: nombre de la obra;
-  - mensaje: `Te recomiendo ir a ver "{Nombre de la obra}" {link de entradas}`.
+  - mensaje: `Te recomiendo ir a ver "{Nombre de la obra}"` y abajo `{link de entradas}`.
   - en mobile abre el share sheet nativo; si el navegador no lo soporta, abre WhatsApp.
 - Si no hay link de entradas cargado, el botón no aparece.
 

@@ -52,7 +52,7 @@ export default async function ProgramaPage({
 function getRecommendation(name: string, ticketUrl: string) {
   if (!ticketUrl) return null;
 
-  const message = `Te recomiendo ir a ver "${name}" ${ticketUrl}`;
+  const message = `Te recomiendo ir a ver "${name}"\n${ticketUrl}`;
   return {
     message,
     fallbackHref: `https://wa.me/?text=${encodeURIComponent(message)}`,

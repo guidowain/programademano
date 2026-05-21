@@ -22,10 +22,11 @@ export async function PUT(
 ) {
   try {
     const { slug } = await params;
-    const { name, slug: nextSlug } = await request.json();
+    const { name, slug: nextSlug, ticketUrl } = await request.json();
     const details = await updateProgram(slug, {
       name: String(name || ""),
       slug: String(nextSlug || ""),
+      ticketUrl: String(ticketUrl || ""),
     });
 
     return NextResponse.json(details);

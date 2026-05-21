@@ -19,7 +19,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, slug } = await request.json();
+    const { name, slug, ticketUrl } = await request.json();
     const normalizedSlug = String(slug || "").trim().toLowerCase();
     const normalizedName = String(name || "").trim();
 
@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Slug inválido" }, { status: 400 });
     }
 
-    await createProgram(normalizedSlug, normalizedName);
-    return NextResponse.json({ name: normalizedName, slug: normalizedSlug });
+    await createProgram(normalizedSlug, normalizedName, String(ticketUrl || ""));
+    return NextResponse.json({ name: normalizedName, slug: normalizedSlug, ticketUrl: String(ticketUrl || "") });
   } catch (error) {
     console.error("Program create error:", error);
     return NextResponse.json({ error: getErrorMessage(error, "No se pudo crear el programa") }, { status: 500 });

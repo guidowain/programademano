@@ -18,6 +18,7 @@ export default function EditProgramaPage() {
   const router = useRouter();
   const [programName, setProgramName] = useState("");
   const [programSlug, setProgramSlug] = useState(slug);
+  const [ticketUrl, setTicketUrl] = useState("");
   const [pages, setPages] = useState<ProgramPage[]>([]);
   const [files, setFiles] = useState<FileList | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
@@ -47,6 +48,7 @@ export default function EditProgramaPage() {
       setPages(data.pages || []);
       setProgramName(data.name || "");
       setProgramSlug(data.slug || slug);
+      setTicketUrl(data.ticketUrl || "");
     } catch {
       setError("Error de conexión");
     } finally {
@@ -63,7 +65,7 @@ export default function EditProgramaPage() {
       const response = await fetch(`/api/admin/programas/${slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: programName, slug: programSlug.trim().toLowerCase() }),
+        body: JSON.stringify({ name: programName, slug: programSlug.trim().toLowerCase(), ticketUrl }),
       });
       const data = await response.json();
 
@@ -74,6 +76,7 @@ export default function EditProgramaPage() {
 
       setProgramName(data.name || "");
       setProgramSlug(data.slug || programSlug);
+      setTicketUrl(data.ticketUrl || "");
       setPages(data.pages || []);
 
       if (data.slug && data.slug !== slug) {
@@ -197,6 +200,16 @@ export default function EditProgramaPage() {
             placeholder="miamigayyo"
             pattern="[a-z0-9-]+"
             required
+          />
+        </label>
+        <label className="admin-field">
+          <span className="admin-label">Link entradas</span>
+          <input
+            className="admin-input"
+            type="url"
+            value={ticketUrl}
+            onChange={(event) => setTicketUrl(event.target.value)}
+            placeholder="https://..."
           />
         </label>
         <button type="submit" className="admin-button secondary" disabled={savingDetails}>

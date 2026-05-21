@@ -16,6 +16,7 @@ export type ProgramPage = {
 export type ProgramSummary = {
   name: string;
   slug: string;
+  ticketUrl: string;
   pageCount: number;
   coverUrl: string | null;
   updatedAt: string | null;
@@ -24,12 +25,14 @@ export type ProgramSummary = {
 export type ProgramDetails = {
   name: string;
   slug: string;
+  ticketUrl: string;
   pages: ProgramPage[];
 };
 
 type ProgramMetadata = {
   name: string;
   slug: string;
+  ticketUrl: string;
 };
 
 type CloudinaryResource = {
@@ -106,6 +109,7 @@ export async function listPrograms(): Promise<ProgramSummary[]> {
         return {
           name: programMetadata?.name || formatSlugName(folder.name),
           slug: folder.name,
+          ticketUrl: programMetadata?.ticketUrl || "",
           pageCount: pages.length,
           coverUrl: pages[0]?.url ?? null,
           updatedAt: null,
@@ -120,12 +124,16 @@ export async function listPrograms(): Promise<ProgramSummary[]> {
   }
 }
 
-export async function createProgram(slug: string, name: string) {
+export async function createProgram(slug: string, name: string, ticketUrl = "") {
   await createProgramFolder(slug);
-  await upsertProgramMetadata({ slug, name: normalizeProgramName(name, slug) });
+  await upsertProgramMetadata({
+    slug,
+    name: normalizeProgramName(name, slug),
+    ticketUrl: normalizeTicketUrl(ticketUrl),
+  });
 }
 
-export async function updateProgram(currentSlug: string, input: { name: string; slug: string }) {
+export async function updateProgram(currentSlug: string, input: { name: string; slug: string; ticketUrl: string }) {
   const nextSlug = input.slug.trim().toLowerCase();
 
   if (!isValidProgramSlug(currentSlug) || !isValidProgramSlug(nextSlug)) {
@@ -139,6 +147,7 @@ export async function updateProgram(currentSlug: string, input: { name: string; 
   await upsertProgramMetadata({
     slug: nextSlug,
     name: normalizeProgramName(input.name, nextSlug),
+    ticketUrl: normalizeTicketUrl(input.ticketUrl),
   }, currentSlug);
 
   return getProgramDetails(nextSlug);
@@ -164,6 +173,7 @@ export async function getProgramDetails(slug: string): Promise<ProgramDetails> {
   return {
     name: programMetadata?.name || formatSlugName(slug),
     slug,
+    ticketUrl: programMetadata?.ticketUrl || "",
     pages,
   };
 }
@@ -441,10 +451,15 @@ function normalizeProgramMetadata(data: unknown): ProgramMetadata[] {
       const raw = item && typeof item === "object" ? (item as Partial<ProgramMetadata>) : {};
       const slug = String(raw.slug || "").trim().toLowerCase();
       const name = normalizeProgramName(String(raw.name || ""), slug);
+      const ticketUrl = normalizeTicketUrl(String(raw.ticketUrl || ""));
 
-      return { slug, name };
+      return { slug, name, ticketUrl };
     })
     .filter((program) => isValidProgramSlug(program.slug));
+}
+
+function normalizeTicketUrl(url: string) {
+  return url.trim();
 }
 
 function formatSlugName(slug: string) {

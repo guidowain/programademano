@@ -54,6 +54,29 @@ a {
   padding: 0;
 }
 
+.program-recommend {
+  display: flex;
+  justify-content: center;
+  padding: 28px 16px 38px;
+  background: #2b2b2b;
+}
+
+.program-recommend-button {
+  display: inline-flex;
+  width: min(100%, 520px);
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f504ff 0%, #fe8b97 34%, #fcc028 100%);
+  color: #050505;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
 .admin-shell {
   min-height: 100vh;
   background: #09090b;
@@ -301,7 +324,7 @@ a {
 }
 
 .admin-program-details {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr) auto;
   align-items: end;
   max-width: 820px;
   margin-bottom: 24px;

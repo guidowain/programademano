@@ -6,6 +6,7 @@ import { useState } from "react";
 export default function NuevoProgramaPage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+  const [ticketUrl, setTicketUrl] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function NuevoProgramaPage() {
       const response = await fetch("/api/admin/programas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: normalizedName, slug: normalizedSlug }),
+        body: JSON.stringify({ name: normalizedName, slug: normalizedSlug, ticketUrl }),
       });
       const data = await response.json();
 
@@ -67,6 +68,17 @@ export default function NuevoProgramaPage() {
             placeholder="lacenadelostontos"
             pattern="[a-z0-9-]+"
             required
+          />
+        </label>
+
+        <label className="admin-field">
+          <span className="admin-label">Link entradas</span>
+          <input
+            className="admin-input"
+            type="url"
+            value={ticketUrl}
+            onChange={(event) => setTicketUrl(event.target.value)}
+            placeholder="https://..."
           />
         </label>
 

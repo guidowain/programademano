@@ -42,14 +42,28 @@ Carpeta base:
 programa-de-mano/{slug}
 ```
 
-Cada página se guarda como imagen con metadata/context:
+Cada programa vive como subcarpeta:
+
+```text
+programa-de-mano/lacenadelostontos
+```
+
+El orden público sale de `order` si existe; si no existe, se toma el primer número del nombre/public ID. Por ejemplo:
+
+```text
+1_lgwilg.webp -> página 1
+2_ift9kq.webp -> página 2
+10_san3yv.webp -> página 10
+```
+
+Las páginas subidas desde el admin también se guardan con metadata/context:
 
 ```text
 order=1
 slug=lacenadelostontos
 ```
 
-El orden público depende de `order`; si falta, se usa el número del public ID como fallback.
+Esto permite subir imágenes manualmente a Cloudinary o desde el admin sin perder el orden.
 
 ## Migración inicial
 

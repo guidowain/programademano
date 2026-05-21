@@ -23,6 +23,8 @@ type CloudinaryResource = {
   asset_id: string;
   public_id: string;
   secure_url: string;
+  asset_folder?: string;
+  filename?: string;
   width?: number;
   height?: number;
   format?: string;
@@ -116,25 +118,9 @@ export async function listProgramPages(slug: string): Promise<ProgramPage[]> {
   if (!isValidProgramSlug(slug)) return [];
 
   const folder = getProgramFolder(slug);
-  const resources: CloudinaryResource[] = [];
-  let nextCursor: string | undefined;
-
-  do {
-    const response = await getCloudinary().api.resources({
-      type: "upload",
-      resource_type: "image",
-      prefix: `${folder}/`,
-      max_results: 500,
-      context: true,
-      next_cursor: nextCursor,
-    });
-
-    resources.push(...(response.resources || []));
-    nextCursor = response.next_cursor;
-  } while (nextCursor);
+  const resources = await searchProgramFolder(folder);
 
   return resources
-    .filter((resource) => resource.public_id.startsWith(`${folder}/`))
     .map((resource, index) => ({
       assetId: resource.asset_id,
       publicId: resource.public_id,
@@ -152,14 +138,18 @@ export async function uploadProgramPages(slug: string, files: File[]) {
     throw new Error("Invalid slug");
   }
 
+  await createProgramFolder(slug);
+
   const existingPages = await listProgramPages(slug);
   const maxOrder = existingPages.reduce((order, page) => Math.max(order, page.order), 0);
   const uploaded: ProgramPage[] = [];
+  const sortedFiles = [...files].sort(compareFilesByPageOrder);
 
-  for (let index = 0; index < files.length; index += 1) {
+  for (let index = 0; index < sortedFiles.length; index += 1) {
     const order = maxOrder + index + 1;
-    const buffer = Buffer.from(await files[index].arrayBuffer());
-    const result = await uploadBuffer(buffer, slug, order);
+    const file = sortedFiles[index];
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const result = await uploadBuffer(buffer, slug, order, file.name);
 
     uploaded.push({
       assetId: result.asset_id,
@@ -234,13 +224,14 @@ export async function deleteProgram(slug: string) {
   }
 }
 
-function uploadBuffer(buffer: Buffer, slug: string, order: number) {
+function uploadBuffer(buffer: Buffer, slug: string, order: number, fileName: string) {
   const folder = getProgramFolder(slug);
-  const publicId = `${folder}/${String(order).padStart(3, "0")}`;
+  const publicId = `${slug}_${String(order).padStart(3, "0")}_${getSafeFileStem(fileName)}`;
 
   return new Promise<CloudinaryResource & { width: number; height: number; format: string }>((resolve, reject) => {
     const stream = getCloudinary().uploader.upload_stream(
       {
+        asset_folder: folder,
         public_id: publicId,
         resource_type: "image",
         overwrite: true,
@@ -267,10 +258,59 @@ function getResourceOrder(resource: CloudinaryResource, fallbackIndex: number) {
 
   if (Number.isFinite(order) && order > 0) return order;
 
-  const match = resource.public_id.match(/\/(\d+)$/);
+  const name = resource.filename || getPublicIdBasename(resource.public_id);
+  const match = name.match(/^0*(\d+)(?:[_-].*)?$/);
   if (match) return Number(match[1]);
 
   return fallbackIndex + 1;
+}
+
+async function searchProgramFolder(folder: string): Promise<CloudinaryResource[]> {
+  const resources: CloudinaryResource[] = [];
+  let nextCursor: string | undefined;
+
+  do {
+    const response = await getCloudinary().search
+      .expression(`resource_type:image AND asset_folder="${folder}"`)
+      .with_field("context")
+      .max_results(500)
+      .next_cursor(nextCursor)
+      .execute();
+
+    resources.push(...((response.resources || []) as CloudinaryResource[]));
+    nextCursor = response.next_cursor;
+  } while (nextCursor);
+
+  return resources;
+}
+
+function compareFilesByPageOrder(first: File, second: File) {
+  const firstOrder = getFileNameOrder(first.name);
+  const secondOrder = getFileNameOrder(second.name);
+
+  if (firstOrder !== secondOrder) return firstOrder - secondOrder;
+  return first.name.localeCompare(second.name, undefined, { numeric: true, sensitivity: "base" });
+}
+
+function getFileNameOrder(fileName: string) {
+  const match = fileName.match(/^0*(\d+)(?:[_\-.].*)?$/);
+  return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
+}
+
+function getPublicIdBasename(publicId: string) {
+  return publicId.split("/").pop() || publicId;
+}
+
+function getSafeFileStem(fileName: string) {
+  const stem = fileName.replace(/\.[^.]+$/, "");
+  const cleanStem = stem
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return cleanStem || "page";
 }
 
 function isCloudinaryNotFound(error: unknown) {

@@ -120,7 +120,7 @@ export default function EditProgramaPage() {
       <header className="admin-page-header">
         <div>
           <h1 className="admin-title">{slug}</h1>
-          <p className="admin-subtitle">Subí páginas, borralas o reordenalas con las flechas.</p>
+          <p className="admin-subtitle">Subí páginas en batch; se ordenan por el primer número del nombre. También podés ajustar con flechas.</p>
         </div>
         <div className="admin-actions">
           <Link href={`/${slug}`} target="_blank" className="admin-button secondary">
@@ -142,6 +142,9 @@ export default function EditProgramaPage() {
             multiple
             onChange={(event) => setFiles(event.target.files)}
           />
+          <span className="admin-subtitle">
+            Ejemplo: 1_portada.webp, 2_elenco.webp, 10_creditos.webp.
+          </span>
         </label>
         <button type="submit" className="admin-button admin-gradient" disabled={saving || !files?.length}>
           {saving ? "Subiendo..." : "Subir imágenes"}

@@ -71,28 +71,30 @@ export default function AdminProgramasPage() {
         <div className="admin-empty">Todavía no hay programas en Cloudinary.</div>
       ) : null}
 
-      <div className="admin-card-list">
+      <div className="admin-program-grid">
         {programs.map((program) => (
-          <article className="admin-card" key={program.slug}>
-            <div className="admin-thumb" aria-hidden="true">
-              {program.coverUrl ? <img src={program.coverUrl} alt="" /> : null}
-            </div>
-            <div className="admin-card-main">
-              <h2 className="admin-card-title">{program.name}</h2>
-              <p className="admin-card-meta">
-                /{program.slug} · {program.pageCount} {program.pageCount === 1 ? "página" : "páginas"}
-              </p>
-            </div>
-            <div className="admin-actions">
-              <Link href={`/${program.slug}`} target="_blank" className="admin-button secondary">
-                Ver
-              </Link>
-              <Link href={`/admin/programas/${program.slug}`} className="admin-button secondary">
-                Editar
-              </Link>
-              <button type="button" className="danger-x" onClick={() => handleDelete(program.slug)} aria-label={`Eliminar ${program.slug}`}>
-                ×
-              </button>
+          <article className="admin-program-card" key={program.slug}>
+            <Link href={`/admin/programas/${program.slug}`} className="admin-program-cover" aria-label={`Editar ${program.name}`}>
+              {program.coverUrl ? <img src={program.coverUrl} alt="" /> : <span>Sin imagen</span>}
+            </Link>
+            <div className="admin-program-body">
+              <div className="admin-card-main">
+                <h2 className="admin-card-title">{program.name}</h2>
+                <p className="admin-card-meta">
+                  /{program.slug} · {program.pageCount} {program.pageCount === 1 ? "página" : "páginas"}
+                </p>
+              </div>
+              <div className="admin-actions">
+                <Link href={`/${program.slug}`} target="_blank" className="admin-button secondary">
+                  Ver
+                </Link>
+                <Link href={`/admin/programas/${program.slug}`} className="admin-button secondary">
+                  Editar
+                </Link>
+                <button type="button" className="danger-x" onClick={() => handleDelete(program.slug)} aria-label={`Eliminar ${program.slug}`}>
+                  ×
+                </button>
+              </div>
             </div>
           </article>
         ))}

@@ -1,71 +1,90 @@
 # ProgramaDeMano.com.ar
 
-Sistema simple para mostrar programas de mano teatrales en formato digital.
+App Next.js para publicar programas de mano digitales. Cada obra tiene una URL pública, sus páginas viven en Cloudinary y el contenido se gestiona desde un admin privado.
 
-## Cómo funciona ahora
+## Flujo público
 
-- El público entra a una URL como `programademano.com.ar/lacenadelostontos`.
-- La app busca las páginas de ese programa en Cloudinary.
-- Las imágenes se muestran en scroll continuo, pantalla limpia y sin controles.
-- El contenido se administra desde `/admin`, sin tocar el repo ni hacer deploy manual.
+- URL de programa: `https://programademano.com.ar/{slug}`.
+- Ejemplo: `https://programademano.com.ar/miamigayyo`.
+- La app lee las páginas desde Cloudinary y las muestra en scroll continuo.
+- Si el programa tiene link de entradas, al final aparece un botón de WhatsApp:
+  - primera línea: `RECOMENDÁ`;
+  - segunda línea: nombre de la obra;
+  - mensaje: `Te recomiendo ir a ver "{Nombre de la obra}" {link de entradas}`.
+- Si no hay link de entradas cargado, el botón no aparece.
 
 ## Admin
 
-El panel vive en `/admin` y está protegido con usuario/contraseña.
+El panel vive en `/admin` y usa usuario/contraseña.
 
-Variables necesarias:
+Desde el admin se puede:
+
+- crear programas con `Nombre`, `Slug` y `Link entradas`;
+- editar nombre, slug y link de entradas;
+- subir páginas en batch;
+- reordenar páginas con flechas;
+- borrar páginas;
+- borrar programas completos;
+- abrir la URL pública de cada programa.
+
+El `Slug` define la carpeta de Cloudinary y la URL pública. Por ejemplo:
+
+```text
+Nombre: Mi amiga y yo
+Slug: miamigayyo
+URL: /miamigayyo
+Carpeta: programa-de-mano/miamigayyo
+```
+
+## Cloudinary
+
+Cloudinary es la fuente de contenido. GitHub queda solo para código.
+
+Carpeta base:
+
+```text
+programa-de-mano
+```
+
+Cada programa vive en:
+
+```text
+programa-de-mano/{slug}
+```
+
+El orden de páginas se resuelve así:
+
+- primero se usa metadata/context `order`, si existe;
+- si no existe, se usa el primer número del nombre/public ID;
+- ejemplo: `1_portada`, `2_elenco`, `10_creditos`.
+
+Al subir desde el admin:
+
+- varias imágenes seleccionadas se ordenan entre sí por el primer número del filename;
+- las nuevas páginas se agregan al final del programa;
+- luego se pueden ajustar con flechas.
+
+La metadata general de programas se guarda como raw JSON en Cloudinary, bajo:
+
+```text
+programa-de-mano-metadata
+```
+
+## Variables de entorno
 
 ```bash
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=change-me
-JWT_SECRET=change-me-to-a-long-random-secret
+ADMIN_USERNAME=
+ADMIN_PASSWORD=
+JWT_SECRET=
 
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 ```
 
-Desde el admin se puede:
+Estas variables deben existir localmente y en Vercel.
 
-- crear programas por slug;
-- subir imágenes;
-- reordenar páginas con flechas;
-- borrar páginas;
-- borrar programas completos;
-- abrir la URL pública del programa.
-
-## Cloudinary
-
-Carpeta base:
-
-```text
-programa-de-mano/{slug}
-```
-
-Cada programa vive como subcarpeta:
-
-```text
-programa-de-mano/lacenadelostontos
-```
-
-El orden público sale de `order` si existe; si no existe, se toma el primer número del nombre/public ID. Por ejemplo:
-
-```text
-1_lgwilg.webp -> página 1
-2_ift9kq.webp -> página 2
-10_san3yv.webp -> página 10
-```
-
-Las páginas subidas desde el admin también se guardan con metadata/context:
-
-```text
-order=1
-slug=lacenadelostontos
-```
-
-Esto permite subir imágenes manualmente a Cloudinary o desde el admin sin perder el orden.
-
-## Scripts
+## Desarrollo
 
 ```bash
 npm run dev
@@ -73,8 +92,22 @@ npm run build
 npm run start
 ```
 
+## Estructura
+
+```text
+app/
+  [slug]/page.tsx              # visor público
+  admin/                       # backoffice
+  api/                         # auth y endpoints admin
+lib/
+  auth.ts
+  cloudinary.ts
+public/
+  logos/
+```
+
 ## Notas
 
-- GitHub queda como fuente de código.
-- Cloudinary pasa a ser la fuente de contenido.
-- Las imágenes viven en Cloudinary; `public/` solo contiene assets estáticos de la app.
+- `public/programas` ya no se usa.
+- No hace falta deploy para cambiar programas, páginas, orden, nombre o link de entradas.
+- Los cambios de contenido se hacen desde `/admin` y quedan guardados en Cloudinary.

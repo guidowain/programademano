@@ -63,10 +63,12 @@ a {
 
 .program-recommend-button {
   display: inline-flex;
+  flex-direction: column;
   width: min(100%, 520px);
-  min-height: 54px;
+  min-height: 78px;
   align-items: center;
   justify-content: center;
+  gap: 3px;
   border-radius: 12px;
   background: #ffffff;
   color: #050505;
@@ -75,6 +77,16 @@ a {
   letter-spacing: 0.08em;
   text-align: center;
   text-transform: uppercase;
+}
+
+.program-recommend-button span,
+.program-recommend-button strong {
+  display: block;
+}
+
+.program-recommend-button strong {
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .admin-shell {

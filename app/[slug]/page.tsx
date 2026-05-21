@@ -35,7 +35,8 @@ export default async function ProgramaPage({
       {recommendationUrl ? (
         <footer className="program-recommend">
           <a href={recommendationUrl} className="program-recommend-button" target="_blank" rel="noreferrer">
-            Recomendá {program.name}
+            <span>Recomendá</span>
+            <strong>{program.name}</strong>
           </a>
         </footer>
       ) : null}

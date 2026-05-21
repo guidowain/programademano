@@ -65,17 +65,6 @@ slug=lacenadelostontos
 
 Esto permite subir imágenes manualmente a Cloudinary o desde el admin sin perder el orden.
 
-## Migración inicial
-
-Los programas existentes en `public/programas` se pueden subir con:
-
-```bash
-node scripts/migrate-programas-to-cloudinary.mjs --dry-run
-node scripts/migrate-programas-to-cloudinary.mjs
-```
-
-El dry-run muestra qué se va a subir. La ejecución real requiere las variables de Cloudinary.
-
 ## Scripts
 
 ```bash
@@ -88,4 +77,4 @@ npm run start
 
 - GitHub queda como fuente de código.
 - Cloudinary pasa a ser la fuente de contenido.
-- Las imágenes locales pueden quedarse como respaldo histórico, pero la app pública ya no las usa.
+- Las imágenes viven en Cloudinary; `public/` solo contiene assets estáticos de la app.

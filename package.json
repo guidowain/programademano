@@ -5,9 +5,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build",
-    "start": "next start",
-    "migrate:cloudinary": "node scripts/migrate-programas-to-cloudinary.mjs",
-    "migrate:cloudinary:dry-run": "node scripts/migrate-programas-to-cloudinary.mjs --dry-run"
+    "start": "next start"
   },
   "dependencies": {
     "cloudinary": "^2.10.0",

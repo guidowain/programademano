@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
     <main className="admin-login">
       <section className="admin-login-panel" aria-label="Login de administración">
         <div className="admin-login-brand">
-          <strong>DRAMA</strong>
+          <img className="admin-login-logo" src="/logos/Logo%20ByN%20invertido.png" alt="Drama" />
           <span>Panel de administración</span>
         </div>
 

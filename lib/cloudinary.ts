@@ -31,6 +31,7 @@ export type ProgramDetails = {
   slug: string;
   ticketUrl: string;
   pages: ProgramPage[];
+  source?: "cloudinary" | "static";
 };
 
 const STATIC_PROGRAMS: Record<string, ProgramDetails> = {
@@ -38,6 +39,7 @@ const STATIC_PROGRAMS: Record<string, ProgramDetails> = {
     name: "Charlie y la fábrica de chocolate",
     slug: "charlie",
     ticketUrl: "https://tuentrada.com/charlie-ylfdc-tgr",
+    source: "static",
     pages: [
       createStaticProgramPage("charlie", 1, 1080, 1920),
       createStaticProgramPage("charlie", 2, 1080, 1507),
@@ -85,6 +87,13 @@ export class MissingCloudinaryConfigError extends Error {
   }
 }
 
+export class StaticProgramMutationError extends Error {
+  constructor() {
+    super("Este programa está alojado en GitHub. Para cambiar sus imágenes hay que actualizar el repo.");
+    this.name = "StaticProgramMutationError";
+  }
+}
+
 export function configureCloudinary() {
   if (configured) return;
 
@@ -120,14 +129,20 @@ export function getProgramFolder(slug: string) {
 }
 
 export async function listPrograms(): Promise<ProgramSummary[]> {
-  const api = getCloudinary().api;
+  const summariesBySlug = new Map(
+    Object.values(STATIC_PROGRAMS).map((program) => [program.slug, getStaticProgramSummary(program)]),
+  );
 
   try {
+    const api = getCloudinary().api;
     const metadata = await getProgramMetadata();
     const metadataBySlug = new Map(metadata.map((program) => [program.slug, program]));
     const folders = await api.sub_folders(PROGRAMAS_BASE_FOLDER);
-    const summaries = await Promise.all(
+    const cloudinarySummaries = await Promise.all(
       (folders.folders || []).map(async (folder: { name: string }) => {
+        const staticProgram = STATIC_PROGRAMS[folder.name];
+        if (staticProgram) return getStaticProgramSummary(staticProgram);
+
         const pages = await listProgramPages(folder.name);
         const programMetadata = metadataBySlug.get(folder.name);
 
@@ -142,11 +157,14 @@ export async function listPrograms(): Promise<ProgramSummary[]> {
       }),
     );
 
-    return summaries.sort((first, second) => first.slug.localeCompare(second.slug));
+    cloudinarySummaries.forEach((summary) => summariesBySlug.set(summary.slug, summary));
   } catch (error: unknown) {
-    if (isCloudinaryNotFound(error)) return [];
-    throw error;
+    if (!isCloudinaryNotFound(error) && !(error instanceof MissingCloudinaryConfigError)) {
+      throw error;
+    }
   }
+
+  return [...summariesBySlug.values()].sort((first, second) => first.slug.localeCompare(second.slug));
 }
 
 export async function createProgram(slug: string, name: string, ticketUrl = "") {
@@ -159,6 +177,8 @@ export async function createProgram(slug: string, name: string, ticketUrl = "") 
 }
 
 export async function updateProgram(currentSlug: string, input: { name: string; slug: string; ticketUrl: string }) {
+  ensureCloudinaryBackedProgram(currentSlug);
+
   const nextSlug = input.slug.trim().toLowerCase();
 
   if (!isValidProgramSlug(currentSlug) || !isValidProgramSlug(nextSlug)) {
@@ -202,6 +222,7 @@ export async function getProgramDetails(slug: string): Promise<ProgramDetails> {
     name: programMetadata?.name || formatSlugName(slug),
     slug,
     ticketUrl: programMetadata?.ticketUrl || "",
+    source: "cloudinary",
     pages,
   };
 }
@@ -230,6 +251,8 @@ export async function listProgramPages(slug: string): Promise<ProgramPage[]> {
 }
 
 export async function uploadProgramPages(slug: string, files: File[]) {
+  ensureCloudinaryBackedProgram(slug);
+
   if (!isValidProgramSlug(slug)) {
     throw new Error("Invalid slug");
   }
@@ -263,6 +286,8 @@ export async function uploadProgramPages(slug: string, files: File[]) {
 }
 
 export async function reorderProgramPages(slug: string, assetIds: string[]) {
+  ensureCloudinaryBackedProgram(slug);
+
   const pages = await listProgramPages(slug);
   const pagesByAssetId = new Map(pages.map((page) => [page.assetId, page]));
 
@@ -288,6 +313,8 @@ export async function reorderProgramPages(slug: string, assetIds: string[]) {
 }
 
 export async function deleteProgramPage(slug: string, assetId: string) {
+  ensureCloudinaryBackedProgram(slug);
+
   const pages = await listProgramPages(slug);
   const page = pages.find((item) => item.assetId === assetId);
 
@@ -302,6 +329,8 @@ export async function deleteProgramPage(slug: string, assetId: string) {
 }
 
 export async function deleteProgram(slug: string) {
+  ensureCloudinaryBackedProgram(slug);
+
   if (!isValidProgramSlug(slug)) {
     throw new Error("Invalid slug");
   }
@@ -326,6 +355,23 @@ export async function deleteProgram(slug: string) {
   }
 
   await removeProgramMetadata(slug);
+}
+
+function ensureCloudinaryBackedProgram(slug: string) {
+  if (STATIC_PROGRAMS[slug]) {
+    throw new StaticProgramMutationError();
+  }
+}
+
+function getStaticProgramSummary(program: ProgramDetails): ProgramSummary {
+  return {
+    name: program.name,
+    slug: program.slug,
+    ticketUrl: program.ticketUrl,
+    pageCount: program.pages.length,
+    coverUrl: program.pages[0]?.optimizedUrl ?? null,
+    updatedAt: null,
+  };
 }
 
 async function getProgramMetadata(): Promise<ProgramMetadata[]> {

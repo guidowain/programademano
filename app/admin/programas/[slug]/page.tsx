@@ -14,6 +14,8 @@ type ProgramPage = {
   order: number;
 };
 
+type ProgramSource = "cloudinary" | "static";
+
 type ProgramAnalytics = {
   configured: boolean;
   last30DaysViews: number;
@@ -29,6 +31,7 @@ export default function EditProgramaPage() {
   const [programName, setProgramName] = useState("");
   const [programSlug, setProgramSlug] = useState(slug);
   const [ticketUrl, setTicketUrl] = useState("");
+  const [programSource, setProgramSource] = useState<ProgramSource>("cloudinary");
   const [pages, setPages] = useState<ProgramPage[]>([]);
   const [files, setFiles] = useState<FileList | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
@@ -42,6 +45,7 @@ export default function EditProgramaPage() {
   const fileSummary = fileCount === 0
     ? "Ninguna imagen seleccionada"
     : `${fileCount} ${fileCount === 1 ? "imagen seleccionada" : "imágenes seleccionadas"}`;
+  const isStaticProgram = programSource === "static";
 
   async function fetchPages() {
     setLoading(true);
@@ -49,7 +53,7 @@ export default function EditProgramaPage() {
 
     try {
       const response = await fetch(`/api/admin/programas/${slug}`, { cache: "no-store" });
-      const data = await response.json();
+      const data = await readResponseData(response);
 
       if (!response.ok) {
         setError(data.error || "No se pudo cargar el programa");
@@ -60,6 +64,7 @@ export default function EditProgramaPage() {
       setProgramName(data.name || "");
       setProgramSlug(data.slug || slug);
       setTicketUrl(data.ticketUrl || "");
+      setProgramSource(data.source || "cloudinary");
     } catch {
       setError("Error de conexión");
     } finally {
@@ -95,7 +100,7 @@ export default function EditProgramaPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: programName, slug: programSlug.trim().toLowerCase(), ticketUrl }),
       });
-      const data = await response.json();
+      const data = await readResponseData(response);
 
       if (!response.ok) {
         setError(data.error || "No se pudo guardar el programa");
@@ -105,6 +110,7 @@ export default function EditProgramaPage() {
       setProgramName(data.name || "");
       setProgramSlug(data.slug || programSlug);
       setTicketUrl(data.ticketUrl || "");
+      setProgramSource(data.source || "cloudinary");
       setPages(data.pages || []);
 
       if (data.slug && data.slug !== slug) {
@@ -131,7 +137,7 @@ export default function EditProgramaPage() {
         method: "POST",
         body: formData,
       });
-      const data = await response.json();
+      const data = await readResponseData(response);
 
       if (!response.ok) {
         setError(data.error || "No se pudieron subir las imágenes");
@@ -157,7 +163,8 @@ export default function EditProgramaPage() {
 
     if (!response.ok) {
       fetchPages();
-      alert("No se pudo guardar el orden. Probá de nuevo.");
+      const data = await readResponseData(response);
+      alert(data.error || "No se pudo guardar el orden. Probá de nuevo.");
     }
   }
 
@@ -180,7 +187,8 @@ export default function EditProgramaPage() {
     });
 
     if (!response.ok) {
-      alert("No se pudo borrar la página");
+      const data = await readResponseData(response);
+      alert(data.error || "No se pudo borrar la página");
       return;
     }
 
@@ -217,6 +225,7 @@ export default function EditProgramaPage() {
             value={programName}
             onChange={(event) => setProgramName(event.target.value)}
             placeholder="Mi amiga y yo"
+            disabled={isStaticProgram}
             required
           />
         </label>
@@ -228,6 +237,7 @@ export default function EditProgramaPage() {
             onChange={(event) => setProgramSlug(event.target.value.replace(/\s+/g, "-").toLowerCase())}
             placeholder="miamigayyo"
             pattern="[a-z0-9-]+"
+            disabled={isStaticProgram}
             required
           />
         </label>
@@ -239,9 +249,10 @@ export default function EditProgramaPage() {
             value={ticketUrl}
             onChange={(event) => setTicketUrl(event.target.value)}
             placeholder="https://..."
+            disabled={isStaticProgram}
           />
         </label>
-        <button type="submit" className="admin-button secondary" disabled={savingDetails}>
+        <button type="submit" className="admin-button secondary" disabled={savingDetails || isStaticProgram}>
           {savingDetails ? "Guardando..." : "Guardar"}
         </button>
       </form>
@@ -254,33 +265,39 @@ export default function EditProgramaPage() {
       </section>
       {analytics?.error ? <p className="admin-card-meta admin-analytics-note">{analytics.error}</p> : null}
 
-      <form className="admin-upload" onSubmit={handleUpload}>
-        <label className="admin-field">
-          <span className="admin-label">Cargar imágenes</span>
-          <input
-            key={fileInputKey}
-            id={uploadInputId}
-            className="admin-file-input"
-            type="file"
-            accept="image/avif,image/jpeg,image/png,image/webp"
-            multiple
-            onChange={(event) => setFiles(event.target.files)}
-          />
-          <div className="admin-upload-panel">
-            <div>
-              <p className="admin-upload-title">{fileSummary}</p>
+      {isStaticProgram ? (
+        <p className="admin-card-meta admin-analytics-note">
+          Este programa está alojado en GitHub. Para cambiar sus imágenes hay que actualizar el repo.
+        </p>
+      ) : (
+        <form className="admin-upload" onSubmit={handleUpload}>
+          <label className="admin-field">
+            <span className="admin-label">Cargar imágenes</span>
+            <input
+              key={fileInputKey}
+              id={uploadInputId}
+              className="admin-file-input"
+              type="file"
+              accept="image/avif,image/jpeg,image/png,image/webp"
+              multiple
+              onChange={(event) => setFiles(event.target.files)}
+            />
+            <div className="admin-upload-panel">
+              <div>
+                <p className="admin-upload-title">{fileSummary}</p>
+              </div>
+              <div className="admin-upload-actions">
+                <label htmlFor={uploadInputId} className="admin-button secondary">
+                  Elegir imágenes
+                </label>
+                <button type="submit" className="admin-button admin-gradient" disabled={saving || fileCount === 0}>
+                  {saving ? "Subiendo..." : "Subir imágenes"}
+                </button>
+              </div>
             </div>
-            <div className="admin-upload-actions">
-              <label htmlFor={uploadInputId} className="admin-button secondary">
-                Elegir imágenes
-              </label>
-              <button type="submit" className="admin-button admin-gradient" disabled={saving || fileCount === 0}>
-                {saving ? "Subiendo..." : "Subir imágenes"}
-              </button>
-            </div>
-          </div>
-        </label>
-      </form>
+          </label>
+        </form>
+      )}
 
       {loading ? <p className="admin-subtitle">Cargando...</p> : null}
       {error ? <p className="admin-error">{error}</p> : null}
@@ -297,7 +314,7 @@ export default function EditProgramaPage() {
                 type="button"
                 className="icon-mini"
                 onClick={() => handleMovePage(index, -1)}
-                disabled={index === 0}
+                disabled={isStaticProgram || index === 0}
                 aria-label={`Subir página ${index + 1}`}
                 title="Subir"
               >
@@ -307,7 +324,7 @@ export default function EditProgramaPage() {
                 type="button"
                 className="icon-mini"
                 onClick={() => handleMovePage(index, 1)}
-                disabled={index === pages.length - 1}
+                disabled={isStaticProgram || index === pages.length - 1}
                 aria-label={`Bajar página ${index + 1}`}
                 title="Bajar"
               >
@@ -327,7 +344,13 @@ export default function EditProgramaPage() {
               <a href={page.url} target="_blank" className="admin-button secondary">
                 Ver imagen
               </a>
-              <button type="button" className="danger-x" onClick={() => handleDeletePage(page.assetId)} aria-label={`Eliminar página ${index + 1}`}>
+              <button
+                type="button"
+                className="danger-x"
+                onClick={() => handleDeletePage(page.assetId)}
+                aria-label={`Eliminar página ${index + 1}`}
+                disabled={isStaticProgram}
+              >
                 ×
               </button>
             </div>
@@ -336,6 +359,22 @@ export default function EditProgramaPage() {
       </div>
     </>
   );
+}
+
+async function readResponseData(response: Response) {
+  const text = await response.text();
+
+  if (!text) return {};
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    if (response.status === 413) {
+      return { error: "Las imágenes superan el límite de subida. Probá subir menos imágenes o archivos más livianos." };
+    }
+
+    return { error: text };
+  }
 }
 
 function AnalyticsStat({ label, value }: { label: string; value?: number }) {

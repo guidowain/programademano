@@ -1,4 +1,4 @@
-import { MissingCloudinaryConfigError, reorderProgramPages } from "@/lib/cloudinary";
+import { MissingCloudinaryConfigError, StaticProgramMutationError, reorderProgramPages } from "@/lib/cloudinary";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -19,11 +19,23 @@ export async function PUT(
     const pages = await reorderProgramPages(slug, assetIds);
     return NextResponse.json({ pages });
   } catch (error) {
-    console.error("Program reorder error:", error);
-    return NextResponse.json({ error: getErrorMessage(error, "No se pudo guardar el orden") }, { status: 500 });
+    if (!(error instanceof StaticProgramMutationError)) {
+      console.error("Program reorder error:", error);
+    }
+
+    return NextResponse.json(
+      { error: getErrorMessage(error, "No se pudo guardar el orden") },
+      { status: getErrorStatus(error) },
+    );
   }
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
-  return error instanceof MissingCloudinaryConfigError ? "Falta configurar Cloudinary" : fallback;
+  if (error instanceof MissingCloudinaryConfigError) return "Falta configurar Cloudinary";
+  if (error instanceof StaticProgramMutationError) return error.message;
+  return fallback;
+}
+
+function getErrorStatus(error: unknown) {
+  return error instanceof StaticProgramMutationError ? 409 : 500;
 }

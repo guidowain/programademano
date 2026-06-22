@@ -1,4 +1,4 @@
-import { MissingCloudinaryConfigError, deleteProgram, getProgramDetails, updateProgram } from "@/lib/cloudinary";
+import { MissingCloudinaryConfigError, StaticProgramMutationError, deleteProgram, getProgramDetails, updateProgram } from "@/lib/cloudinary";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -31,8 +31,14 @@ export async function PUT(
 
     return NextResponse.json(details);
   } catch (error) {
-    console.error("Program update error:", error);
-    return NextResponse.json({ error: getErrorMessage(error, "No se pudo guardar el programa") }, { status: 500 });
+    if (!(error instanceof StaticProgramMutationError)) {
+      console.error("Program update error:", error);
+    }
+
+    return NextResponse.json(
+      { error: getErrorMessage(error, "No se pudo guardar el programa") },
+      { status: getErrorStatus(error) },
+    );
   }
 }
 
@@ -45,11 +51,23 @@ export async function DELETE(
     await deleteProgram(slug);
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Program delete error:", error);
-    return NextResponse.json({ error: getErrorMessage(error, "No se pudo borrar el programa") }, { status: 500 });
+    if (!(error instanceof StaticProgramMutationError)) {
+      console.error("Program delete error:", error);
+    }
+
+    return NextResponse.json(
+      { error: getErrorMessage(error, "No se pudo borrar el programa") },
+      { status: getErrorStatus(error) },
+    );
   }
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
-  return error instanceof MissingCloudinaryConfigError ? "Falta configurar Cloudinary" : fallback;
+  if (error instanceof MissingCloudinaryConfigError) return "Falta configurar Cloudinary";
+  if (error instanceof StaticProgramMutationError) return error.message;
+  return fallback;
+}
+
+function getErrorStatus(error: unknown) {
+  return error instanceof StaticProgramMutationError ? 409 : 500;
 }

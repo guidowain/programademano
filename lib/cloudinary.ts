@@ -33,6 +33,27 @@ export type ProgramDetails = {
   pages: ProgramPage[];
 };
 
+const STATIC_PROGRAMS: Record<string, ProgramDetails> = {
+  charlie: {
+    name: "Charlie y la fábrica de chocolate",
+    slug: "charlie",
+    ticketUrl: "https://tuentrada.com/charlie-ylfdc-tgr",
+    pages: [
+      createStaticProgramPage("charlie", 1, 1080, 1920),
+      createStaticProgramPage("charlie", 2, 1080, 1507),
+      createStaticProgramPage("charlie", 3, 1080, 3761),
+      createStaticProgramPage("charlie", 4, 1080, 6081),
+      createStaticProgramPage("charlie", 5, 1080, 7936),
+      createStaticProgramPage("charlie", 6, 1081, 3510),
+      createStaticProgramPage("charlie", 7, 1080, 4836),
+      createStaticProgramPage("charlie", 8, 1080, 1200),
+      createStaticProgramPage("charlie", 9, 1080, 1485),
+      createStaticProgramPage("charlie", 10, 1080, 1559),
+      createStaticProgramPage("charlie", 11, 1080, 1774),
+    ],
+  },
+};
+
 type ProgramMetadata = {
   name: string;
   slug: string;
@@ -170,6 +191,9 @@ export async function createProgramFolder(slug: string) {
 }
 
 export async function getProgramDetails(slug: string): Promise<ProgramDetails> {
+  const staticProgram = STATIC_PROGRAMS[slug];
+  if (staticProgram) return staticProgram;
+
   const pages = await listProgramPages(slug);
   const metadata = await getProgramMetadata();
   const programMetadata = metadata.find((program) => program.slug === slug);
@@ -183,6 +207,9 @@ export async function getProgramDetails(slug: string): Promise<ProgramDetails> {
 }
 
 export async function listProgramPages(slug: string): Promise<ProgramPage[]> {
+  const staticProgram = STATIC_PROGRAMS[slug];
+  if (staticProgram) return staticProgram.pages;
+
   if (!isValidProgramSlug(slug)) return [];
 
   const folder = getProgramFolder(slug);
@@ -371,6 +398,21 @@ function uploadBuffer(buffer: Buffer, slug: string, order: number, fileName: str
 
     stream.end(buffer);
   });
+}
+
+function createStaticProgramPage(slug: string, order: number, width: number, height: number): ProgramPage {
+  const url = `/programas/${slug}/${order}.webp`;
+
+  return {
+    assetId: `${slug}-${String(order).padStart(3, "0")}`,
+    publicId: `static/${slug}/${order}`,
+    url,
+    optimizedUrl: url,
+    width,
+    height,
+    order,
+    format: "webp",
+  };
 }
 
 export function getOptimizedCloudinaryImageUrl(url: string, width = PROGRAM_PAGE_WIDTH) {

@@ -8,6 +8,7 @@ type ProgramPage = {
   assetId: string;
   publicId: string;
   url: string;
+  optimizedUrl: string;
   width: number;
   height: number;
   order: number;
@@ -314,7 +315,7 @@ export default function EditProgramaPage() {
               </button>
             </div>
             <div className="admin-thumb" aria-hidden="true">
-              <img src={page.url} alt="" />
+              <img src={page.optimizedUrl} alt="" />
             </div>
             <div className="admin-card-main">
               <h2 className="admin-card-title">Página {index + 1}</h2>

@@ -7,6 +7,7 @@ export type ProgramPage = {
   assetId: string;
   publicId: string;
   url: string;
+  optimizedUrl: string;
   width: number;
   height: number;
   order: number;
@@ -21,6 +22,9 @@ export type ProgramSummary = {
   coverUrl: string | null;
   updatedAt: string | null;
 };
+
+const CLOUDINARY_UPLOAD_MARKER = "/upload/";
+const PROGRAM_PAGE_WIDTH = 1080;
 
 export type ProgramDetails = {
   name: string;
@@ -111,7 +115,7 @@ export async function listPrograms(): Promise<ProgramSummary[]> {
           slug: folder.name,
           ticketUrl: programMetadata?.ticketUrl || "",
           pageCount: pages.length,
-          coverUrl: pages[0]?.url ?? null,
+          coverUrl: pages[0]?.optimizedUrl ?? null,
           updatedAt: null,
         };
       }),
@@ -189,6 +193,7 @@ export async function listProgramPages(slug: string): Promise<ProgramPage[]> {
       assetId: resource.asset_id,
       publicId: resource.public_id,
       url: resource.secure_url,
+      optimizedUrl: getOptimizedCloudinaryImageUrl(resource.secure_url, PROGRAM_PAGE_WIDTH),
       width: resource.width ?? 1080,
       height: resource.height ?? 1920,
       order: getResourceOrder(resource, index),
@@ -219,6 +224,7 @@ export async function uploadProgramPages(slug: string, files: File[]) {
       assetId: result.asset_id,
       publicId: result.public_id,
       url: result.secure_url,
+      optimizedUrl: getOptimizedCloudinaryImageUrl(result.secure_url, PROGRAM_PAGE_WIDTH),
       width: result.width,
       height: result.height,
       order,
@@ -365,6 +371,21 @@ function uploadBuffer(buffer: Buffer, slug: string, order: number, fileName: str
 
     stream.end(buffer);
   });
+}
+
+export function getOptimizedCloudinaryImageUrl(url: string, width = PROGRAM_PAGE_WIDTH) {
+  if (!url.includes("res.cloudinary.com") || !url.includes(CLOUDINARY_UPLOAD_MARKER)) return url;
+
+  const markerIndex = url.indexOf(CLOUDINARY_UPLOAD_MARKER);
+  const uploadEndIndex = markerIndex + CLOUDINARY_UPLOAD_MARKER.length;
+  const rest = url.slice(uploadEndIndex);
+  const firstSegment = rest.split("/")[0] || "";
+
+  if (firstSegment.includes(",") || firstSegment.startsWith("f_") || firstSegment.startsWith("q_") || firstSegment.startsWith("c_")) {
+    return url;
+  }
+
+  return `${url.slice(0, uploadEndIndex)}f_auto,q_auto:good,c_limit,w_${Math.round(width)}/${rest}`;
 }
 
 function getResourceOrder(resource: CloudinaryResource, fallbackIndex: number) {

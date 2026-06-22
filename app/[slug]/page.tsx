@@ -1,4 +1,4 @@
-import { getProgramDetails } from "@/lib/cloudinary";
+import { getOptimizedCloudinaryImageUrl, getProgramDetails } from "@/lib/cloudinary";
 import ProgramRecommendButton from "@/components/ProgramRecommendButton";
 import ProgramViewTracker from "@/components/ProgramViewTracker";
 import { notFound } from "next/navigation";
@@ -26,7 +26,13 @@ export default async function ProgramaPage({
         {program.pages.map((page, index) => (
           <img
             key={page.assetId}
-            src={page.url}
+            src={page.optimizedUrl}
+            srcSet={[
+              `${getOptimizedCloudinaryImageUrl(page.url, 480)} 480w`,
+              `${getOptimizedCloudinaryImageUrl(page.url, 720)} 720w`,
+              `${getOptimizedCloudinaryImageUrl(page.url, 1080)} 1080w`,
+            ].join(", ")}
+            sizes="min(100vw, 1080px)"
             alt={`Página ${index + 1}`}
             width={page.width}
             height={page.height}

@@ -21,6 +21,7 @@ export type ProgramSummary = {
   pageCount: number;
   coverUrl: string | null;
   updatedAt: string | null;
+  source: "cloudinary" | "static";
 };
 
 const CLOUDINARY_UPLOAD_MARKER = "/upload/";
@@ -35,6 +36,16 @@ export type ProgramDetails = {
 };
 
 const STATIC_PROGRAMS: Record<string, ProgramDetails> = {
+  alejandra: {
+    name: "Alejandra",
+    slug: "alejandra",
+    ticketUrl: "https://linktr.ee/rechimuzziok",
+    source: "static",
+    pages: [
+      createStaticProgramPage("alejandra", 1, 1080, 1920),
+      createStaticProgramPage("alejandra", 2, 1081, 2562),
+    ],
+  },
   charlie: {
     name: "Charlie y la fábrica de chocolate",
     slug: "charlie",
@@ -52,6 +63,38 @@ const STATIC_PROGRAMS: Record<string, ProgramDetails> = {
       createStaticProgramPage("charlie", 9, 1080, 1485),
       createStaticProgramPage("charlie", 10, 1080, 1559),
       createStaticProgramPage("charlie", 11, 1080, 1774),
+    ],
+  },
+  lacenadelostontos: {
+    name: "La cena de los tontos",
+    slug: "lacenadelostontos",
+    ticketUrl: "https://www.plateanet.com/obra/33879?obra=LA%20CENA%20DE%20LOS%20TONTOS%20.&paso=inicio",
+    source: "static",
+    pages: [
+      createStaticProgramPage("lacenadelostontos", 1, 1080, 1920),
+      createStaticProgramPage("lacenadelostontos", 2, 1080, 3039),
+      createStaticProgramPage("lacenadelostontos", 3, 1080, 5402),
+      createStaticProgramPage("lacenadelostontos", 4, 1080, 1920),
+      createStaticProgramPage("lacenadelostontos", 5, 1080, 1920),
+      createStaticProgramPage("lacenadelostontos", 6, 1080, 990),
+      createStaticProgramPage("lacenadelostontos", 7, 1080, 3594),
+      createStaticProgramPage("lacenadelostontos", 8, 1080, 1920),
+      createStaticProgramPage("lacenadelostontos", 9, 1080, 1920),
+      createStaticProgramPage("lacenadelostontos", 10, 1080, 1920),
+      createStaticProgramPage("lacenadelostontos", 11, 1080, 1920),
+      createStaticProgramPage("lacenadelostontos", 12, 1080, 1920),
+      createStaticProgramPage("lacenadelostontos", 13, 1080, 1920),
+      createStaticProgramPage("lacenadelostontos", 14, 1080, 1920),
+    ],
+  },
+  miamigayyo: {
+    name: "Mi amiga y yo",
+    slug: "miamigayyo",
+    ticketUrl: "https://www.plateanet.com/obra/30531?obra=MI%20AMIGA%20Y%20YO&paso=inicio",
+    source: "static",
+    pages: [
+      createStaticProgramPage("miamigayyo", 1, 1080, 1920),
+      createStaticProgramPage("miamigayyo", 2, 1080, 3105),
     ],
   },
 };
@@ -153,6 +196,7 @@ export async function listPrograms(): Promise<ProgramSummary[]> {
           pageCount: pages.length,
           coverUrl: pages[0]?.optimizedUrl ?? null,
           updatedAt: null,
+          source: "cloudinary" as const,
         };
       }),
     );
@@ -371,6 +415,7 @@ function getStaticProgramSummary(program: ProgramDetails): ProgramSummary {
     pageCount: program.pages.length,
     coverUrl: program.pages[0]?.optimizedUrl ?? null,
     updatedAt: null,
+    source: "static",
   };
 }
 

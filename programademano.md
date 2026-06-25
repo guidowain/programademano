@@ -1,12 +1,12 @@
 # ProgramaDeMano.com.ar
 
-App Next.js para publicar programas de mano digitales. Cada obra tiene una URL pública, sus páginas viven en Cloudinary y el contenido se gestiona desde un admin privado.
+App Next.js para publicar programas de mano digitales. Cada obra tiene una URL pública y sus páginas pueden vivir como archivos estáticos en `public/programas` o, para programas administrables desde el panel, en Cloudinary.
 
 ## Flujo público
 
 - URL de programa: `https://programademano.com.ar/{slug}`.
 - Ejemplo: `https://programademano.com.ar/miamigayyo`.
-- La app lee las páginas desde Cloudinary y las muestra en scroll continuo.
+- La app lee las páginas del programa y las muestra en scroll continuo.
 - Si el programa tiene link de entradas, al final aparece un botón para recomendar:
   - primera línea: `RECOMENDÁ`;
   - segunda línea: nombre de la obra;
@@ -29,7 +29,7 @@ Desde el admin se puede:
 - abrir la URL pública de cada programa.
 - ver métricas simples por programa: 30 días, total y recomendaciones.
 
-El `Slug` define la carpeta de Cloudinary y la URL pública. Por ejemplo:
+El `Slug` define la URL pública y, para programas dinámicos, la carpeta de Cloudinary. Por ejemplo:
 
 ```text
 Nombre: Mi amiga y yo
@@ -40,7 +40,7 @@ Carpeta: programa-de-mano/miamigayyo
 
 ## Cloudinary
 
-Cloudinary es la fuente de contenido. GitHub queda solo para código.
+Cloudinary queda como fuente de contenido para programas dinámicos creados desde el admin. Los programas de bajo cambio pueden alojarse como archivos estáticos en `public/programas/{slug}` y declararse en `STATIC_PROGRAMS`.
 
 Carpeta base:
 
@@ -116,6 +116,5 @@ public/
 
 ## Notas
 
-- `public/programas` ya no se usa.
-- No hace falta deploy para cambiar programas, páginas, orden, nombre o link de entradas.
-- Los cambios de contenido se hacen desde `/admin` y quedan guardados en Cloudinary.
+- Los programas en `public/programas` requieren commit y deploy para cambiar imágenes, orden, nombre o link de entradas.
+- Los programas dinámicos se cambian desde `/admin` y quedan guardados en Cloudinary.

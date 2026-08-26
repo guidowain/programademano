@@ -636,19 +636,22 @@ function formatSlugName(slug: string) {
 }
 
 function isCloudinaryNotFound(error: unknown) {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "http_code" in error &&
-    (error as { http_code?: number }).http_code === 404
-  );
+  return getCloudinaryHttpCode(error) === 404;
 }
 
 function isCloudinaryAlreadyExists(error: unknown) {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "http_code" in error &&
-    (error as { http_code?: number }).http_code === 409
-  );
+  return getCloudinaryHttpCode(error) === 409;
+}
+
+function getCloudinaryHttpCode(error: unknown) {
+  if (typeof error !== "object" || error === null) return undefined;
+
+  const directCode = (error as { http_code?: unknown }).http_code;
+  if (typeof directCode === "number") return directCode;
+
+  const nestedError = (error as { error?: unknown }).error;
+  if (typeof nestedError !== "object" || nestedError === null) return undefined;
+
+  const nestedCode = (nestedError as { http_code?: unknown }).http_code;
+  return typeof nestedCode === "number" ? nestedCode : undefined;
 }

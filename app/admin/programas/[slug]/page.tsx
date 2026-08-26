@@ -249,10 +249,9 @@ export default function EditProgramaPage() {
             value={ticketUrl}
             onChange={(event) => setTicketUrl(event.target.value)}
             placeholder="https://..."
-            disabled={isStaticProgram}
           />
         </label>
-        <button type="submit" className="admin-button secondary" disabled={savingDetails || isStaticProgram}>
+        <button type="submit" className="admin-button secondary" disabled={savingDetails}>
           {savingDetails ? "Guardando..." : "Guardar"}
         </button>
       </form>
@@ -267,7 +266,7 @@ export default function EditProgramaPage() {
 
       {isStaticProgram ? (
         <p className="admin-card-meta admin-analytics-note">
-          Este programa está alojado en GitHub. Para cambiar sus imágenes hay que actualizar el repo.
+          Las imágenes, el nombre y el slug están alojados en GitHub. El link de entradas se puede editar desde acá.
         </p>
       ) : (
         <form className="admin-upload" onSubmit={handleUpload}>

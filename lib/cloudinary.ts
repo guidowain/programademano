@@ -92,7 +92,7 @@ const STATIC_PROGRAMS: Record<string, ProgramDetails> = {
   lallamada: {
     name: "La llamada",
     slug: "lallamada",
-    ticketUrl: "",
+    ticketUrl: "https://www.entradauno.com/landing/la-llamada-astros?idEspectaculoCartel=17248&cHashValidacion=3605cf2644e6e7ee23fff7635cc236153c6fea6e",
     source: "static",
     placeholder: true,
     pages: [],
@@ -190,11 +190,26 @@ export async function listPrograms(): Promise<ProgramSummary[]> {
     const api = getCloudinary().api;
     const metadata = await getProgramMetadata();
     const metadataBySlug = new Map(metadata.map((program) => [program.slug, program]));
+
+    metadata.forEach((programMetadata) => {
+      const staticProgram = STATIC_PROGRAMS[programMetadata.slug];
+      if (!staticProgram) return;
+
+      summariesBySlug.set(
+        staticProgram.slug,
+        getStaticProgramSummary(applyStaticProgramMetadata(staticProgram, programMetadata)),
+      );
+    });
+
     const folders = await api.sub_folders(PROGRAMAS_BASE_FOLDER);
     const cloudinarySummaries = await Promise.all(
       (folders.folders || []).map(async (folder: { name: string }) => {
         const staticProgram = STATIC_PROGRAMS[folder.name];
-        if (staticProgram) return getStaticProgramSummary(staticProgram);
+        if (staticProgram) {
+          return getStaticProgramSummary(
+            applyStaticProgramMetadata(staticProgram, metadataBySlug.get(folder.name)),
+          );
+        }
 
         const pages = await listProgramPages(folder.name);
         const programMetadata = metadataBySlug.get(folder.name);
@@ -231,12 +246,28 @@ export async function createProgram(slug: string, name: string, ticketUrl = "") 
 }
 
 export async function updateProgram(currentSlug: string, input: { name: string; slug: string; ticketUrl: string }) {
-  ensureCloudinaryBackedProgram(currentSlug);
-
   const nextSlug = input.slug.trim().toLowerCase();
 
   if (!isValidProgramSlug(currentSlug) || !isValidProgramSlug(nextSlug)) {
     throw new Error("Invalid slug");
+  }
+
+  const staticProgram = STATIC_PROGRAMS[currentSlug];
+  if (staticProgram) {
+    if (
+      nextSlug !== currentSlug ||
+      normalizeProgramName(input.name, currentSlug) !== staticProgram.name
+    ) {
+      throw new StaticProgramMutationError();
+    }
+
+    await upsertProgramMetadata({
+      slug: currentSlug,
+      name: staticProgram.name,
+      ticketUrl: normalizeTicketUrl(input.ticketUrl),
+    });
+
+    return getProgramDetails(currentSlug);
   }
 
   if (currentSlug !== nextSlug) {
@@ -266,7 +297,13 @@ export async function createProgramFolder(slug: string) {
 
 export async function getProgramDetails(slug: string): Promise<ProgramDetails> {
   const staticProgram = STATIC_PROGRAMS[slug];
-  if (staticProgram) return staticProgram;
+  if (staticProgram) {
+    const metadata = await getProgramMetadata();
+    return applyStaticProgramMetadata(
+      staticProgram,
+      metadata.find((program) => program.slug === slug),
+    );
+  }
 
   const pages = await listProgramPages(slug);
   const metadata = await getProgramMetadata();
@@ -427,6 +464,18 @@ function getStaticProgramSummary(program: ProgramDetails): ProgramSummary {
     updatedAt: null,
     source: "static",
     placeholder: program.placeholder,
+  };
+}
+
+function applyStaticProgramMetadata(
+  program: ProgramDetails,
+  metadata?: ProgramMetadata,
+): ProgramDetails {
+  if (!metadata) return program;
+
+  return {
+    ...program,
+    ticketUrl: metadata.ticketUrl,
   };
 }
 

@@ -13,7 +13,7 @@ export default async function ProgramaPage({
   const { slug } = await params;
   const program = await getProgramDetails(slug);
 
-  if (program.pages.length === 0) {
+  if (program.pages.length === 0 && !program.placeholder) {
     notFound();
   }
 
@@ -22,25 +22,35 @@ export default async function ProgramaPage({
   return (
     <main className="program-viewer">
       <ProgramViewTracker name={program.name} slug={program.slug} />
-      <div className="program-pages">
-        {program.pages.map((page, index) => (
-          <img
-            key={page.assetId}
-            src={page.optimizedUrl}
-            srcSet={[
-              `${getOptimizedCloudinaryImageUrl(page.url, 480)} 480w`,
-              `${getOptimizedCloudinaryImageUrl(page.url, 720)} 720w`,
-              `${getOptimizedCloudinaryImageUrl(page.url, 1080)} 1080w`,
-            ].join(", ")}
-            sizes="min(100vw, 1080px)"
-            alt={`Página ${index + 1}`}
-            width={page.width}
-            height={page.height}
-            loading={index === 0 ? "eager" : "lazy"}
-            fetchPriority={index === 0 ? "high" : "auto"}
-          />
-        ))}
-      </div>
+      {program.placeholder ? (
+        <section className="program-placeholder" aria-labelledby="program-placeholder-title">
+          <div className="program-placeholder-content">
+            <p className="program-placeholder-kicker">Programa de mano</p>
+            <h1 id="program-placeholder-title">{program.name}</h1>
+            <p className="program-placeholder-status">Próximamente</p>
+          </div>
+        </section>
+      ) : (
+        <div className="program-pages">
+          {program.pages.map((page, index) => (
+            <img
+              key={page.assetId}
+              src={page.optimizedUrl}
+              srcSet={[
+                `${getOptimizedCloudinaryImageUrl(page.url, 480)} 480w`,
+                `${getOptimizedCloudinaryImageUrl(page.url, 720)} 720w`,
+                `${getOptimizedCloudinaryImageUrl(page.url, 1080)} 1080w`,
+              ].join(", ")}
+              sizes="min(100vw, 1080px)"
+              alt={`Página ${index + 1}`}
+              width={page.width}
+              height={page.height}
+              loading={index === 0 ? "eager" : "lazy"}
+              fetchPriority={index === 0 ? "high" : "auto"}
+            />
+          ))}
+        </div>
+      )}
       {recommendation ? (
         <footer className="program-recommend">
           <ProgramRecommendButton

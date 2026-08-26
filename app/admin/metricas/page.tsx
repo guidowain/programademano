@@ -8,6 +8,7 @@ type MetricsProgram = {
   slug: string;
   coverUrl: string | null;
   pageCount: number;
+  placeholder?: boolean;
   analytics: {
     configured: boolean;
     last30DaysViews: number;
@@ -71,7 +72,11 @@ export default function AdminMetricasPage() {
         {programs.map((program) => (
           <article className="admin-metric-card" key={program.slug}>
             <Link href={`/admin/programas/${program.slug}`} className="admin-metric-cover" aria-label={`Editar ${program.name}`}>
-              {program.coverUrl ? <img src={program.coverUrl} alt="" /> : <span>Sin imagen</span>}
+              {program.coverUrl ? (
+                <img src={program.coverUrl} alt="" />
+              ) : (
+                <span>{program.placeholder ? "Próximamente" : "Sin imagen"}</span>
+              )}
             </Link>
 
             <div className="admin-metric-body">

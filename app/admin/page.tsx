@@ -9,6 +9,7 @@ type ProgramSummary = {
   pageCount: number;
   coverUrl: string | null;
   source?: "cloudinary" | "static";
+  placeholder?: boolean;
 };
 
 export default function AdminProgramasPage() {
@@ -79,7 +80,11 @@ export default function AdminProgramasPage() {
           return (
             <article className="admin-program-card" key={program.slug}>
               <Link href={`/admin/programas/${program.slug}`} className="admin-program-cover" aria-label={`Editar ${program.name}`}>
-                {program.coverUrl ? <img src={program.coverUrl} alt="" /> : <span>Sin imagen</span>}
+                {program.coverUrl ? (
+                  <img src={program.coverUrl} alt="" />
+                ) : (
+                  <span>{program.placeholder ? "Próximamente" : "Sin imagen"}</span>
+                )}
               </Link>
               <div className="admin-program-body">
                 <div className="admin-card-main">

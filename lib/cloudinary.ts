@@ -22,6 +22,7 @@ export type ProgramSummary = {
   coverUrl: string | null;
   updatedAt: string | null;
   source: "cloudinary" | "static";
+  placeholder?: boolean;
 };
 
 const CLOUDINARY_UPLOAD_MARKER = "/upload/";
@@ -33,6 +34,7 @@ export type ProgramDetails = {
   ticketUrl: string;
   pages: ProgramPage[];
   source?: "cloudinary" | "static";
+  placeholder?: boolean;
 };
 
 const STATIC_PROGRAMS: Record<string, ProgramDetails> = {
@@ -86,6 +88,14 @@ const STATIC_PROGRAMS: Record<string, ProgramDetails> = {
       createStaticProgramPage("lacenadelostontos", 13, 1080, 1920),
       createStaticProgramPage("lacenadelostontos", 14, 1080, 1920),
     ],
+  },
+  lallamada: {
+    name: "La llamada",
+    slug: "lallamada",
+    ticketUrl: "",
+    source: "static",
+    placeholder: true,
+    pages: [],
   },
   miamigayyo: {
     name: "Mi amiga y yo",
@@ -416,6 +426,7 @@ function getStaticProgramSummary(program: ProgramDetails): ProgramSummary {
     coverUrl: program.pages[0]?.optimizedUrl ?? null,
     updatedAt: null,
     source: "static",
+    placeholder: program.placeholder,
   };
 }
 

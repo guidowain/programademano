@@ -18,11 +18,12 @@ export default async function ProgramaPage({
   }
 
   const recommendation = getRecommendation(program.name, program.ticketUrl);
+  const showPlaceholder = program.placeholder && program.pages.length === 0;
 
   return (
     <main className="program-viewer">
       <ProgramViewTracker name={program.name} slug={program.slug} />
-      {program.placeholder ? (
+      {showPlaceholder ? (
         <section className="program-placeholder" aria-labelledby="program-placeholder-title">
           <div className="program-placeholder-content">
             <p className="program-placeholder-kicker">Programa de mano</p>

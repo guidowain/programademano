@@ -94,8 +94,10 @@ const STATIC_PROGRAMS: Record<string, ProgramDetails> = {
     slug: "lallamada",
     ticketUrl: "https://www.entradauno.com/landing/la-llamada-astros?idEspectaculoCartel=17248&cHashValidacion=3605cf2644e6e7ee23fff7635cc236153c6fea6e",
     source: "static",
-    placeholder: true,
-    pages: [],
+    pages: [
+      createStaticProgramPage("lallamada", 1, 1080, 1920),
+      createStaticProgramPage("lallamada", 2, 1080, 4911),
+    ],
   },
   miamigayyo: {
     name: "Mi amiga y yo",
@@ -463,7 +465,7 @@ function getStaticProgramSummary(program: ProgramDetails): ProgramSummary {
     coverUrl: program.pages[0]?.optimizedUrl ?? null,
     updatedAt: null,
     source: "static",
-    placeholder: program.placeholder,
+    placeholder: Boolean(program.placeholder && program.pages.length === 0),
   };
 }
 
